@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'accounts',
     'courses',
+    'attendance_records'
 ]
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
