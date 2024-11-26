@@ -1,7 +1,7 @@
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Attendance, Course
-from .serializers import AttendanceSerializer
+from serializers import AttendanceSerializer
 from rest_framework import viewsets, permissions
 from django.shortcuts import get_object_or_404
 
