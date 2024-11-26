@@ -1,0 +1,64 @@
+.modalOverlay {
+    position: fixed;
+    top: -100px;
+    left: 30%;
+    width: 100vw;
+    height: 60vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    transition: top 0.3s ease-in-out;
+  }
+  
+  .toggleBtn {
+    width: 100%;
+  }
+  
+  .toggleBtn button {
+    width: 50%;
+    height: 40px;
+    cursor: pointer;
+    font-size: 18px;
+    border-radius: 0;
+    background-color: #ffffff;
+    
+    color: black;
+  }
+  
+  
+  .signInBtn.active, .createAcc.active {
+    background-color: rgb(12, 12, 80);
+    color: rgb(255, 255, 255);
+    transition:  background-color 0.800s;
+  }
+  
+  .frmContainer {
+    background-color: rgba(0, 255, 255, 0.205);
+    width: 100%;
+    margin-top: 0;
+    height: 200px;
+  }
+  .login{
+   
+   h3{
+    margin: 0;
+   }
+  }
+  .createNewAcc{
+    h3{
+        margin: 0;
+       }
+  }
+  .activeBackground {
+    background-color: rgb(12, 12, 80);
+  }
+  
+  .login, .createNewAcc {
+    display: none;
+  }
+  
+  .show {
+    display: flex;
+  }
+  
