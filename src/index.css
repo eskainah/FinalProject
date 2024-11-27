@@ -59,7 +59,7 @@ header {
   background: url(../public/cwu.jpg);
   height: 100vh;
   background-size: cover;
-  div{
+  .hero{
     width: 40%;
     margin: 16% auto;
     font-family: 'Roboto', sans-serif;
@@ -67,11 +67,12 @@ header {
     text-align: center;
     line-height: 30px;
     color: rgba(245, 245, 245, 0.918);
-  }
+}
   p{
     margin-bottom: 5px;
   }
 }
+
 .signinBtn{
   background-color: rgb(15, 15, 121);
   padding: .2em 3em;
