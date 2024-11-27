@@ -1,10 +1,12 @@
+*{
+    font-family: 'Roboto', sans-serif;
+}
 .modalOverlay {
     position: fixed;
-    top: -100px;
-    left: 30%;
-    width: 100vw;
-    height: 60vh;
-    background: rgba(0, 0, 0, 0.5);
+    margin: -220px auto;
+    width: 40vw;
+    height: 53vh;
+    background: rgb(12, 12, 80);
     display: flex;
     flex-direction: column;
     z-index: 1000;
@@ -22,38 +24,71 @@
     font-size: 18px;
     border-radius: 0;
     background-color: #ffffff;
-    
     color: black;
   }
   
-  
+
   .signInBtn.active, .createAcc.active {
     background-color: rgb(12, 12, 80);
     color: rgb(255, 255, 255);
-    transition:  background-color 0.800s;
+    transition:  background-color 0.8s ease-in-out;
   }
   
   .frmContainer {
-    background-color: rgba(0, 255, 255, 0.205);
     width: 100%;
     margin-top: 0;
     height: 200px;
+    font-size: 16px;
+
+    input, select{
+        padding: 6px 10px ;
+        font-size: 14px;
+        border-radius: 0;
+        border: none;
+        background-color: rgba(128, 128, 128, 0.199);
+    }
+    option{
+        color: #201f1f;
+    }
+    button{
+        margin: 10px 0;
+        border: none;
+        border-radius: 0;
+        padding: 8px;
+        background-color: #ffffffb9;
+        color: rgb(12, 12, 139);
+        font-size: 15px;
+        font-weight: 900;
+    }
+    label{
+        text-align: left;
+        }
   }
-  .login{
-   
-   h3{
-    margin: 0;
-   }
-  }
-  .createNewAcc{
-    h3{
+ 
+  .createNewAcc, .login{
+    display: flex;
+    flex-direction: column;
+    padding: 10px 40px;
+  
+    p{
+        height: 30px;
         margin: 0;
+        color: rgb(221, 50, 50);
        }
   }
-  .activeBackground {
-    background-color: rgb(12, 12, 80);
+  .login{
+    padding-top: 30px;
   }
-  
+  .row{
+    display: flex;
+    justify-content: space-between;
+  }
+  .row-items{
+    width: 32%;
+    display: flex;
+    flex-direction: column;
+  }
+
   .login, .createNewAcc {
     display: none;
   }
