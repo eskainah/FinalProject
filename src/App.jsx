@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import logo from '../public/logo.png'
 import LoginSignup from './components/Auth/LoginSignup'
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
 
 import './App.css'
 
 function App() {
+  const logo = "/logo.png";
   const [showLoginSignup, setShowLoginSignup] = useState(false);
 
   const toggleLoginSignup = () => {
@@ -12,7 +14,12 @@ function App() {
   };
 
   return (
-    <>
+    <AuthProvider>
+    <Router>
+      <Routes>
+        <Route
+          path="/"
+          element={
     <div className="container">
       <header>
         <section>
@@ -35,7 +42,11 @@ function App() {
       </div>
      
   </div>
-  </>
+   }
+   />
+ </Routes>
+</Router>
+</AuthProvider>
 )}
   
 export default App

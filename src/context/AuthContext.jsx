@@ -1,31 +1,41 @@
-// src/context/AuthContext.js
-import React, { createContext, useState } from "react";
+import { createContext, useState } from "react";
 
 export const AuthContext = createContext();
 
-const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [users, setUsers] = useState([]); // Store registered users
 
   const login = (username, role) => {
     setUser({ username, role });
+  };
+
+  const register = (
+    username,
+    email,
+    password,
+    role,
+    first_name,
+    middle_name,
+    last_name
+  ) => {
+    console.log("User registered:", {
+      username,
+      email,
+      password,
+      role,
+      first_name,
+      middle_name,
+      last_name,
+    });
   };
 
   const logout = () => {
     setUser(null);
   };
 
-  const register = (username, email, password, role, first_name, middle_name, last_name) => {
-    const newUser = { username, email, password, role, first_name, middle_name, last_name };
-    setUsers([...users, newUser]); // Add new user to the users array
-    alert("Registration successful!");
-  };
-
   return (
-    <AuthContext.Provider value={{ user, login, logout, register }}>
+    <AuthContext.Provider value={{ user, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
-
-export default AuthProvider;
