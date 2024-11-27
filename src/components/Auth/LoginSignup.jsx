@@ -1,7 +1,7 @@
-// src/components/LoginSignup.js
-import { useEffect, useRef, useState, useContext } from 'react';
-import './LoginSignup.css';
-import { AuthContext } from '../../context/AuthContext';
+import { useEffect, useRef, useState, useContext } from "react";
+import "./LoginSignup.css";
+import { AuthContext } from "../../context/AuthContext";
+import UserRegistrationForm from "./UserRegistrationForm";
 
 function LoginSignup({ onClose }) {
   const modalRef = useRef(null);
@@ -13,13 +13,13 @@ function LoginSignup({ onClose }) {
         onClose();
       }
     };
-    document.addEventListener('mousedown', handleClickOutside); // Add event listener to document
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);  // Cleanup event listener on unmount
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [onClose]);
 
-  const [activeSection, setActiveSection] = useState('login'); // 'login' or 'createAcc'
+  const [activeSection, setActiveSection] = useState("login"); // 'login' or 'createAcc'
 
   const handleButtonClick = (section) => {
     setActiveSection(section);
@@ -30,6 +30,7 @@ function LoginSignup({ onClose }) {
         username: "",
         email: "",
         password: "",
+        school_name: "",
         role: "student",
         first_name: "",
         middle_name: "",
@@ -40,7 +41,6 @@ function LoginSignup({ onClose }) {
       setCredentials({ username: "", password: "" });
     }
   };
-  
 
   const { login, register } = useContext(AuthContext);
   const [credentials, setCredentials] = useState({ username: "", password: "" });
@@ -48,6 +48,7 @@ function LoginSignup({ onClose }) {
     username: "",
     email: "",
     password: "",
+    school_name: "",
     role: "student",
     first_name: "",
     middle_name: "",
@@ -55,171 +56,180 @@ function LoginSignup({ onClose }) {
   });
   const [error, setError] = useState("");
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    if (credentials.username === "admin" && credentials.password === "password") {
-      login(credentials.username, "admin");
-      alert("Login successful!");
-    } else {
-      setError("Invalid credentials");
+  
+    // Check if both username and password are provided
+    if (!credentials.username || !credentials.password) {
+      setError("Please enter both username and password.");
+      return;
+    }
+  
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/auth/login/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(credentials),
+      });
+  
+      const data = await response.json();  // Get the response data
+      console.log("Login response data:", data);  // Log the response to verify the content
+  
+      if (response.ok) {
+        // Only call login if the response contains valid data (like 'user')
+        if (data && data.message === "Login successful") {
+          login(credentials.username, credentials.password);  // Assuming you want to use credentials for login
+          alert("Login successful!");
+          setCredentials({ username: "", password: "" });
+          setError("");  // Clear any existing error messages
+        } else {
+          setError("Unexpected response from server.");
+        }
+      } else {
+        // Handle error response
+        setError(data.message || "Invalid credentials.");
+      }
+    } catch (error) {
+      setError("An error occurred. Please try again.");
+      console.error("Login error:", error);
     }
   };
-
-  const handleRegisterSubmit = (e) => {
+  
+  
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
+  
+    // Validate that all required fields are filled
     if (
       !newUser.username ||
       !newUser.email ||
       !newUser.password ||
+      newUser.role !== "admin" || // Only allow 'admin' role for registration
       !newUser.first_name ||
-      !newUser.last_name
+      !newUser.last_name ||
+      !newUser.school_name // Ensure 'school_name' is filled
     ) {
+      if (newUser.role !== "admin") {
+        setError("Only Admin role can register.");
+        return;
+      }
       setError("Please fill in all required fields.");
+     
       return;
     }
-    // Register the user
-    register(newUser.username, newUser.email, newUser.password, newUser.role, newUser.first_name, newUser.middle_name, newUser.last_name);
-    setNewUser({
-      username: "",
-      email: "",
-      password: "",
-      role: "student",
-      first_name: "",
-      middle_name: "",
-      last_name: "",
-    }); // Reset form
-    setError("");
+  
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/auth/register/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newUser),
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        alert("Registration successful!");
+        setNewUser({
+          username: "",
+          email: "",
+          password: "",
+          role: "admin", // Default to 'admin' after successful registration
+          first_name: "",
+          middle_name: "",
+          last_name: "",
+          school_name: "",
+        });
+        setError("");
+      } else {
+        setError(data.error || "Failed to register.");
+      }
+    } catch (error) {
+      setError("An error occurred. Please try again.");
+      console.error("Registration error:", error);
+    }
   };
+  
 
   return (
     <div className="modalOverlay" ref={modalRef}>
-      <section className='toggleBtn'>
+      <section className="toggleBtn">
         <button
-          className={`signInBtn ${activeSection === 'login' ? 'active' : ''}`}
-          onClick={() => handleButtonClick('login')}
+          className={`signInBtn ${activeSection === "login" ? "active" : ""}`}
+          onClick={() => handleButtonClick("login")}
         >
           Sign In
         </button>
         <button
-          className={`createAcc ${activeSection === 'createAcc' ? 'active' : ''}`}
-          onClick={() => handleButtonClick('createAcc')}
+          className={`createAcc ${activeSection === "createAcc" ? "active" : ""}`}
+          onClick={() => handleButtonClick("createAcc")}
         >
           Create Account
         </button>
       </section>
-      
-      <section className='frmContainer'>
-        <form onSubmit={activeSection === 'login' ? handleLoginSubmit : handleRegisterSubmit}>
-          <section className={`login ${activeSection === 'login' ? 'show' : ''}`}>
-            <p>
-              {error && <p className="error">{error}</p>}
-            </p>
-            <label htmlFor="username">Username</label>
-            <input
-              type="text"
-              name="username"
-              placeholder="Username"
-              onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
-            />
-             <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-            />
-            <button type="submit">Login</button>
-          </section>
-          
-          <section className={`createNewAcc ${activeSection === 'createAcc' ? 'show' : ''}`}>
-            <p>
-            {error && <p className="error">{error}</p>}
-            </p>
-            <section className='row'>
-              <div className='row-items'>
-              <label htmlFor="first_name">First Name</label>
-              <input
-                type="text"
-                name="first_name"
-                placeholder="First Name"
-                value={newUser.first_name}
-                onChange={(e) => setNewUser({ ...newUser, first_name: e.target.value })}
-              />
-              </div>
-              <div className='row-items'>
-                <label htmlFor="middle_name">Middle Name</label>
-                <input
-                  type="text"
-                  name="middle_name"
-                  placeholder="Middle Name (Optional)"
-                  value={newUser.middle_name}
-                  onChange={(e) => setNewUser({ ...newUser, middle_name: e.target.value })}
-                />
-              </div>
-              <div className='row-items'>
-                <label htmlFor="last_name">Last Name</label>
-                <input
-                type="text"
-                name="last_name"
-                placeholder="Last Name"
-                value={newUser.last_name}
-                onChange={(e) => setNewUser({ ...newUser, last_name: e.target.value })}
-              />
-              </div>
-            </section>
 
-            <section className='row' >
-              <div className='row-items' style={{ width: "49%" }}>
-                <label htmlFor="role">Role</label>
-                <select
-                    name="role"
-                    value={newUser.role}
-                    onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
-                  >
-                    <option value="student">Student</option>
-                    <option value="teacher">Teacher</option>
-                    <option value="admin">Admin</option>
-                </select>
-              </div>
-              <div className='row-items' style={{ width: "49%" }}>
-                <label htmlFor="email">Email</label>
-                <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                value={newUser.email}
-                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                />
-              </div>
-              
-            </section>
-            
-           <div className='row'>
-            <div className='row-items'  style={{ width: "49%" }}>
+      <section className="frmContainer">
+        <form
+          onSubmit={
+            activeSection === "login" ? handleLoginSubmit : handleRegisterSubmit
+          }
+        >
+          <section 
+          className={`login ${activeSection === "login" ? "show" : ""}`}>
+           <p>
+            {error && <p className="error">{error}</p>}
+           </p>
+            <section className="row">
+              <div className="row-items" style={{ width: "49%", margin: "5px auto" }}>
                 <label htmlFor="username">Username</label>
                 <input
                   type="text"
                   name="username"
+                  value={credentials.username} 
                   placeholder="Username"
-                  value={newUser.username}
-                  onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+                  onChange={(e) =>
+                    setCredentials({ ...credentials, username: e.target.value })
+                  }
                 />
+              </div>
+            </section>
             
-            </div>
-            <div className='row-items'  style={{ width: "49%" }}>
-              <label htmlFor="password">Password</label>
+            <section className="row">
+              <div className="row-items" style={{ width: "49%", margin: "5px auto" }}>
+                <label htmlFor="password">Password</label>
                 <input
                   type="password"
                   name="password"
+                  value={credentials.password}
                   placeholder="Password"
-                  value={newUser.password}
-                  onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                  onChange={(e) =>
+                    setCredentials({ ...credentials, password: e.target.value })
+                  }
                 />
-            </div>
-           </div>
-            
-            <button type="submit">Create Account</button>
+              </div>
+              
+            </section>
+
+            <section className="row">
+              <div className="row-items" style={{ width: "49%", margin: "0 auto" }}>
+              <button type="submit">Login</button>
+              </div>
+            </section>
+           
           </section>
+
+          <section
+            className={`createNewAcc ${
+              activeSection === "createAcc" ? "show" : ""
+            }`}
+          >
+            <UserRegistrationForm
+              newUser={newUser}
+              setNewUser={setNewUser}
+              error={error}
+            />
+             <button type="submit">Create Account</button>
+          </section>
+
         </form>
       </section>
     </div>
