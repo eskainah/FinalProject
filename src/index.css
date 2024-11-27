@@ -1,0 +1,116 @@
+*, *::before, *::after{
+  box-sizing:border-box;
+}
+:root {
+  font-family: 'Roboto', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  
+  
+}
+
+a {
+  color: #f7f7f7;
+  font-size: 18px;
+
+  text-decoration: inherit;
+}
+a:hover {
+  color: #b8b8be;
+}
+
+body {
+  margin: 0 auto;
+  
+  min-width: 320px;
+  min-height: 100vh;
+}
+header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  height: 60px;
+  padding: 10px 50px 10px 50px;
+  img{
+    width: 180px;
+  }
+  nav{
+  align-content: center;
+  width: 230px;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  
+  }
+}
+.holder{
+  background-color: #b31f1f;
+}
+.container{
+  background: url(../public/cwu.jpg);
+  height: 100vh;
+  background-size: cover;
+  .hero{
+    width: 40%;
+    margin: 16% auto;
+    font-family: 'Roboto', sans-serif;
+    font-size: 24px;
+    text-align: center;
+    line-height: 30px;
+    color: rgba(245, 245, 245, 0.918);
+}
+  p{
+    margin-bottom: 5px;
+  }
+}
+
+.signinBtn{
+  background-color: rgb(15, 15, 121);
+  padding: .2em 3em;
+  margin-top: 0;
+  border-radius: 50px;
+}
+.signinBtn:hover{
+  background-color: #ffffff;
+  color: rgb(12, 11, 11);
+  transition: background-color 0.80s;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: .7em;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
