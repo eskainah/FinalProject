@@ -13,7 +13,7 @@ function App() {
 
   return (
     <>
-    <div class="container">
+    <div className="container">
       <header>
         <section>
           <img src={logo} alt=""/>
@@ -26,11 +26,11 @@ function App() {
         
         </nav>
       </header> 
-      <div>
+      <div className='hero'>
         <p><strong>Attendance Simplified, Results amplified <br />
           Be here now, thrive everywhere  </strong>
         </p>
-        <button class="signinBtn" onClick={toggleLoginSignup}>Sign In</button>
+        <button className="signinBtn" onClick={toggleLoginSignup}>Sign In</button>
         {showLoginSignup && <LoginSignup onClose={toggleLoginSignup} />}
       </div>
      
