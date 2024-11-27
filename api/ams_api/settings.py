@@ -40,7 +40,13 @@ INSTALLED_APPS = [
     'rest_framework',
     'accounts',
     'courses',
-    'attendance_records'
+    'attendance_records',
+     "corsheaders",
+]
+
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # React app URL
 ]
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
@@ -62,7 +68,24 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
+
+MIDDLEWARE.insert(0, "corsheaders.middleware.CorsMiddleware")
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Add the URL of your frontend
+]
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_HEADERS = [
+    'content-type',
+    'authorization',
+    # Add other headers as needed
+]
+
 
 ROOT_URLCONF = 'ams_api.urls'
 
