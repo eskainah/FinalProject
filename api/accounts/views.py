@@ -52,7 +52,11 @@ class AuthViewSet(viewsets.ViewSet):
         if serializer.is_valid():
             user = serializer.validated_data
             login(request, user)  # Log the user in
-            return Response({"message": "Login successful"}, status=status.HTTP_200_OK)
+            return Response({
+                "message": "Login successful",
+                "username": user.username,
+                "role": user.role,
+                }, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
