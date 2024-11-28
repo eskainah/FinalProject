@@ -6,7 +6,9 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
   const login = (username, role) => {
-    setUser({ username, role });
+    const userDetails = { username, role };
+    console.log("Logging in user:", userDetails); // Debug log
+    setUser(userDetails);
   };
 
   const register = (
@@ -39,3 +41,7 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
+
+  
+
