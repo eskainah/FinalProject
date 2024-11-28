@@ -3,7 +3,7 @@ import "./LoginSignup.css";
 import { AuthContext } from "../../context/AuthContext";
 import UserRegistrationForm from "./UserRegistrationForm";
 
-function LoginSignup({ onClose }) {
+function LoginSignup({ onClose, onLoginSuccess }) {
   const modalRef = useRef(null);
 
   // Close the modal when clicking outside of the modal (outside the overlay and content)
@@ -59,7 +59,6 @@ function LoginSignup({ onClose }) {
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
   
-    // Check if both username and password are provided
     if (!credentials.username || !credentials.password) {
       setError("Please enter both username and password.");
       return;
@@ -72,21 +71,19 @@ function LoginSignup({ onClose }) {
         body: JSON.stringify(credentials),
       });
   
-      const data = await response.json();  // Get the response data
-      console.log("Login response data:", data);  // Log the response to verify the content
+      const data = await response.json();
+      console.log("API Response:", data); // Debug log
   
       if (response.ok) {
-        // Only call login if the response contains valid data (like 'user')
         if (data && data.message === "Login successful") {
-          login(credentials.username, credentials.password);  // Assuming you want to use credentials for login
+          login(data.username, data.role); // Save username and role
           alert("Login successful!");
-          setCredentials({ username: "", password: "" });
-          setError("");  // Clear any existing error messages
+          onLoginSuccess(); // Notify App about login success
+          setError("");
         } else {
           setError("Unexpected response from server.");
         }
       } else {
-        // Handle error response
         setError(data.message || "Invalid credentials.");
       }
     } catch (error) {
@@ -94,6 +91,10 @@ function LoginSignup({ onClose }) {
       console.error("Login error:", error);
     }
   };
+  
+  
+  
+  
   
   
   const handleRegisterSubmit = async (e) => {
