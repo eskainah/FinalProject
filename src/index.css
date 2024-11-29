@@ -133,11 +133,10 @@ button {
 .logoImg{
   width: 130px;
   height: 30px;
- background-image: url(../public/logo.png);
+ background-image: url(../public/B&W.svg);
  background-repeat: no-repeat;
  background-position: center;
  background-size: cover;
- background-color: #213547;
   margin-left: 40px;
 }
 .profile{
