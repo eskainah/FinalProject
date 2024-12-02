@@ -56,45 +56,44 @@ function LoginSignup({ onClose, onLoginSuccess }) {
   });
   const [error, setError] = useState("");
 
-  const handleLoginSubmit = async (e) => {
-    e.preventDefault();
-  
-    if (!credentials.username || !credentials.password) {
-      setError("Please enter both username and password.");
-      return;
-    }
-  
-    try {
-      const response = await fetch("http://127.0.0.1:8000/api/auth/login/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credentials),
-      });
-  
-      const data = await response.json();
-      console.log("API Response:", data); // Debug log
-  
-      if (response.ok) {
-        if (data && data.message === "Login successful") {
-          login(data.username, data.role); // Save username and role
-          alert("Login successful!");
-          onLoginSuccess(); // Notify App about login success
-          setError("");
-        } else {
-          setError("Unexpected response from server.");
-        }
+// Custom login handler
+const handleLoginSubmit = async (e) => {
+  e.preventDefault();
+
+  if (!credentials.username || !credentials.password) {
+    setError("Please enter both username and password.");
+    return;
+  }
+
+  try {
+    const response = await fetch("http://127.0.0.1:8000/api/auth/login/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(credentials),
+    });
+
+    const data = await response.json();
+    console.log("API Response:", data); // Debug log
+
+    if (response.ok) {
+      if (data && data.token) {
+        // On success, store the token using the login function from context
+        login(data.username, data.role, data.token); // Assuming login saves token to context
+        alert("Login successful!");
+        onLoginSuccess(); // Notify App about login success
+        setError(""); // Clear error
       } else {
-        setError(data.message || "Invalid credentials.");
+        setError("Unexpected response from server.");
       }
-    } catch (error) {
-      setError("An error occurred. Please try again.");
-      console.error("Login error:", error);
+    } else {
+      setError(data.message || "Invalid credentials.");
     }
-  };
-  
-  
-  
-  
+  } catch (error) {
+    setError("An error occurred. Please try again.");
+    console.error("Login error:", error);
+  }
+};
+
   
   
   const handleRegisterSubmit = async (e) => {
