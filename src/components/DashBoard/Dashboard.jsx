@@ -1,13 +1,22 @@
 import React, { useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
-import RoleBasedContent from "./RoleBaseContent";
+import  ApiContext  from "../../context/ApiContext";
+import Card from "./Card";
+//import RoleBasedContent from "./RoleBaseContent";
 
 const Dashboard = () => {
   
-  const { user, logout } = useContext(AuthContext);
+  const group = "/group.png";
+  const book = "/book.png"
 
-  if (!user) return <p>No user data available</p>;
-  
+  const { user, logout } = useContext(AuthContext);
+  const { data, loading, error } = useContext(ApiContext);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  //if (data) return <div>{JSON.stringify(data)}</div>;
+
+  const { total_courses = 0, total_students = 0, attendance = {}, courses = [] } = data;
   return (
     <div className="dashboard-container">
       {/* Dashboard UI */}
@@ -30,7 +39,38 @@ const Dashboard = () => {
       </section>
 
       <section className="dashboard-main">
-        <RoleBasedContent />
+          <section className="col-1">
+            <div className="colItems itemspad">
+                 <Card cornerElement={book} title="Total Courses" value={total_courses} /> 
+            </div>
+            <div className="colItems itemspad">
+              <Card cornerElement={group} title="Total Students" value={total_students} /> 
+            </div>
+            <div className="colItems present">
+              {/* <Card title="Present" value={attendance.present || 0} /> */}
+            </div>
+            <div className="colItems absent">
+              {/* <Card title="Absent" value={attendance.absent || 0} /> */}
+            </div>
+            <div className="colItems excuse">
+              {/* <Card title="Excused" value={attendance.excused || 0} /> */}
+            </div>
+          </section>
+          <section className="col-1 "> 
+            {courses.length > 0 ? (
+                  courses.map((course) => (
+                <div className="colItems" key={course.course_name}>
+                  <Card  cornerElement={group} title={course.course_name} value={`${course.student_count}`}/>
+                </div>
+              ))
+            ) : (
+              <p>No courses assigned</p>
+            )}
+          </section>
+
+          <section className="graphholder">
+
+          </section>
       </section>
       
       </div>
