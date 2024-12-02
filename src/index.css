@@ -59,18 +59,20 @@ header {
   background: url(../public/cwu.jpg);
   height: 100vh;
   background-size: cover;
-  .hero{
-    width: 40%;
-    margin: 16% auto;
-    font-family: 'Roboto', sans-serif;
-    font-size: 24px;
-    text-align: center;
-    line-height: 30px;
-    color: rgba(245, 245, 245, 0.918);
-}
-  p{
+   p{
     margin-bottom: 5px;
   }
+}
+
+.hero{
+  height: 32%;
+  width: 40%;
+  margin: 16% auto;
+  font-family: 'Roboto', sans-serif;
+  font-size: 24px;
+  text-align: center;
+  line-height: 30px;
+  color: rgba(245, 245, 245, 0.918);
 }
 
 .signinBtn{
@@ -138,10 +140,11 @@ button {
  background-position: center;
  background-size: cover;
   margin-left: 40px;
+  margin-top: -6px;
 }
 .profile{
   height: 55px;
-  margin-right: 40px;
+  margin-right: 60px;
   display: flex;
   align-items: center;
  
@@ -151,19 +154,19 @@ button {
   line-height: 16px;
   h4{
     margin: 0;
-    font-size: 16PX;
+    font-size: 14PX;
   }
   p{
     margin: 0;
-    font-size: 14PX;
+    font-size: 12PX;
   }
 }
 .profile_img{
-  width: 50px;
-  height: 50px;
+  width: 30px;
+  height: 30px;
   background-color: aqua;
   border-radius: 50%;
-  margin-right: 5px;
+  margin-right: 10px;
 }
 .main-section{
   height: 92vh;
@@ -205,21 +208,18 @@ button {
     color: rgb(1, 126, 7);
   }
 }
-.itemspad{
-  p{
-    padding-top: 20px;
-  }
-}
+
 .col-1{
   display: flex;
   width: 100%;
   margin: 15px  auto 0 auto;
   width: 95%;
+  
 }
 .colItems{
   width: 16%;
   margin-right: 10px;
-  height: 105px;
+  height: 90px;
 }
 .card{
   background-color: rgb(255, 255, 255);
@@ -231,17 +231,32 @@ button {
 }
 
 .value{
-  font-size: 32px;
-  margin: 0 20px;
+  font-size: 1.5rem;
+  margin: 0 10px;
   
 }
 .title{
-  font-size: 1rem;
-  margin: 0 20px 15px;
+  font-size: 0.9rem;
+  margin: 0 10px 15px;
+  line-height: 14px;
 }
 
+.corner-element {
+  display: flex;
+  padding: 10px 0 5px 0;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.corner-image {
+  width: 32px;
+  height: 100%;
+  margin-right: 15px;
+  object-fit: cover;
+  border-radius: 50%;
+}
 .graphholder{
-  height: 58vh;
+  height: 53vh;
   margin: 15px  auto 0 auto;
   width: 95%;
   background-color: #213547;
