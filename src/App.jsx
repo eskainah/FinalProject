@@ -2,9 +2,8 @@ import { useState } from "react";
 import LoginSignup from "./components/Auth/LoginSignup";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
-import { DashboardProvider } from "./context/DashboardContext";
 import Dashboard from "./components/DashBoard/Dashboard";
-
+import { ApiProvider } from "./context/ApiContext";
 import "./App.css";
 function App() {
   const logo = "/logo.png";
@@ -17,7 +16,7 @@ function App() {
 
   return (
     <AuthProvider>
-      <DashboardProvider>
+     <ApiProvider>
         <Router>
           <Routes>
             <Route
@@ -53,7 +52,7 @@ function App() {
             />
           </Routes>
         </Router>
-      </DashboardProvider>
+        </ApiProvider>
     </AuthProvider>
   );
 }
