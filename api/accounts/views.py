@@ -3,10 +3,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.contrib.auth import login, logout, get_user_model,authenticate
 from rest_framework.permissions import AllowAny
-<<<<<<< HEAD
-=======
+
 from rest_framework.authtoken.models import Token  # Import Token model
->>>>>>> 1331b330c336ba9da9e3dbd22af8b51d51f448e9
+
 from .serializers import UserSerializer, LoginSerializer, SubAccountSerializer
 import logging
 
