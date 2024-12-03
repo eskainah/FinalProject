@@ -56,7 +56,7 @@ header {
   background-color: #b31f1f;
 }
 .container{
-  background: url(../public/cwu.jpg);
+  background: url(/cwu.jpg);
   height: 100vh;
   background-size: cover;
    p{
@@ -135,7 +135,7 @@ button {
 .logoImg{
   width: 130px;
   height: 30px;
- background-image: url(../public/B&W.svg);
+ background-image: url(/B&W.svg);
  background-repeat: no-repeat;
  background-position: center;
  background-size: cover;
@@ -185,25 +185,16 @@ button {
   flex-direction: column;
 }
 .excuse{
-  p{
-    padding-top: 20px;
-  }
   h3{
-    color: blue;
+    color: rgb(0, 0, 255);
   }
 }
 .absent{
-  p{
-    padding-top: 20px;
-  }
   h3{
     color: rgb(255, 0, 0);
   }
 }
 .present{
-  p{
-    padding-top: 20px;
-  }
   h3{
     color: rgb(1, 126, 7);
   }
@@ -211,7 +202,6 @@ button {
 
 .col-1{
   display: flex;
-  width: 100%;
   margin: 15px  auto 0 auto;
   width: 95%;
   
@@ -228,6 +218,10 @@ button {
   -webkit-box-shadow: 0px 1px 5px 0px rgba(56, 55, 55, 0.75);
   -moz-box-shadow: 0px 1px 5px 0px rgba(56, 55, 55, 0.75);
   box-shadow: 0px 1px 5px 0px rgba(56, 55, 55, 0.75);
+ 
+}
+.course-link{
+  color: rgb(36, 35, 35);
 }
 
 .value{
@@ -260,4 +254,31 @@ button {
   margin: 15px  auto 0 auto;
   width: 95%;
   background-color: #213547;
+}
+
+.profiles{
+  width: 95%;
+  margin: 10px auto;
+  height: 71vh;
+  
+}
+.student-list{
+  display: flex;
+ 
+  flex-wrap: wrap;
+  box-sizing: border-box;
+  gap: 5px;
+}
+
+.course-selector{
+  
+  select{
+    font-size: 15px;
+    border-radius: 0;
+    background-color:  rgb(226, 226, 226);
+    border: none;
+    padding: 2px;
+    color: #242424;
+  }
+  
 }
