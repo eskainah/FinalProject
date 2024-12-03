@@ -1,10 +1,11 @@
 from django.db import models
-from accounts.models import CustomUser
-from courses.models import Course
 from django.utils import timezone
-import json
+from django.core.exceptions import ValidationError
+from courses.models import Enrollment  # Assuming Enrollment is in the 'enrollment' app
+
 
 class Attendance(models.Model):
+    # Choices for attendance status
     PRESENT = 'Present'
     ABSENT = 'Absent'
     EXCUSED = 'Excused'
@@ -15,33 +16,54 @@ class Attendance(models.Model):
         (EXCUSED, 'Excused'),
     ]
 
+    # Fields
     attendance_id = models.CharField(max_length=20, unique=True, primary_key=True)
-    course_code = models.CharField(max_length=10)  # Teacher-entered course code
-    course_name = models.CharField(max_length=100, blank=True)  # Auto-populated course name
-    instructor_id = models.CharField(max_length=10, blank=True)  # Auto-populated instructor ID
-    instructor_name = models.CharField(max_length=100, blank=True)  # Concatenated instructor name
-    students_data = models.JSONField(default=dict)  # Stores student IDs and concatenated names
+    course_code = models.CharField(max_length=20, editable=False)  # Populated from Enrollment
+    course_name = models.CharField(max_length=255, editable=False)  # Populated from Enrollment
+    student_id = models.CharField(max_length=10, editable=False)  # Auto-populated from Enrollment
+    student_name = models.CharField(max_length=255, editable=False)  # Auto-populated from Enrollment
+    instructor_id = models.CharField(max_length=10, editable=False)  # Populated from Course via Enrollment
+    instructor_name = models.CharField(max_length=255, editable=False)  # Populated from Course via Enrollment
     date = models.DateField(default=timezone.now)
-    semester = models.CharField(max_length=10)
-    status = models.JSONField(default=dict)  # Stores student IDs and statuses as a JSON
-
-    def __str__(self):
-        return f"{self.attendance_id} - {self.course_code} - {self.date}"
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
+    semester = models.CharField(max_length=20, editable=False)  # Populated from Enrollment
 
     def save(self, *args, **kwargs):
+        """
+        Generate attendance_id and populate fields from the Enrollment model.
+        Ensure only one attendance record is created per day for a course.
+        """
+        # Check if an attendance record already exists for the course on this date
+        if Attendance.objects.filter(course_code=self.course_code, date=self.date).exists():
+            raise ValidationError(f"Attendance record for {self.course_code} already exists for {self.date}. Only one record can be created per day.")
+
+        # Ensure attendance_id is generated
         if not self.attendance_id:
-            # Get the last attendance record for the same course code
             last_attendance = Attendance.objects.filter(course_code=self.course_code).order_by('attendance_id').last()
             if last_attendance:
-                last_num = int(last_attendance.attendance_id.split('-')[1])
+                last_num = int(last_attendance.attendance_id.split('-')[-1])
                 new_num = last_num + 1
             else:
                 new_num = 1
-            self.attendance_id = f"{self.course_code}-{new_num:03d}"  # e.g., CSC100-001
+            self.attendance_id = f"{self.course_code}-{new_num:03d}"
 
-        # Auto-populate instructor name and ID if available
-        if self.instructor_id and not self.instructor_name:
-            instructor = CustomUser.objects.get(custom_id=self.instructor_id)
-            self.instructor_name = f"{instructor.first_name} {instructor.middle_name or ''} {instructor.last_name}"
+        # Auto-populate data from Enrollment
+        try:
+            # Fetch the enrollment records for the students in the course
+            enrollments = Enrollment.objects.filter(course_code=self.course_code)
+            for enrollment in enrollments:
+                self.student_id = enrollment.student_id.custom_id
+                self.student_name = f"{enrollment.student_id.first_name} {enrollment.student_id.middle_name or ''} {enrollment.student_id.last_name}".strip()
+                self.course_name = enrollment.course_name
+                self.semester = enrollment.semester
+                self.instructor_id = enrollment.course_code.instructor_id.custom_id
+                self.instructor_name = enrollment.course_code.instructor_full_name
 
-        super().save(*args, **kwargs)
+                # Save the attendance for each student
+                super().save(*args, **kwargs)
+
+        except Exception as e:
+            raise ValidationError(f"Error saving attendance: {e}")
+
+    def __str__(self):
+        return f"{self.attendance_id} - {self.course_code} - {self.date}"
