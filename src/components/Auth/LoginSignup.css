@@ -5,7 +5,7 @@
     position: fixed;
     margin: -220px auto;
     width: 40vw;
-    height: 40vh;
+    height: 52%; 
     background: rgb(12, 12, 80);
     display: flex;
     flex-direction: column;
@@ -37,7 +37,7 @@
   .frmContainer {
     width: 100%;
     margin-top: 0;
-    height: 200px;
+    height: 100%;
     font-size: 16px;
 
     input, select{

@@ -6,6 +6,11 @@ from .models import Course, Enrollment
 from .serializers import CourseSerializer, EnrollmentSerializer
 from .permissions import IsAdmin, IsTeacher, IsStudent
 from django.contrib.auth import get_user_model
+from django.db.models import Count
+from rest_framework.permissions import AllowAny
+from rest_framework import permissions
+from rest_framework.authentication import TokenAuthentication
+
 
 User = get_user_model()
 
@@ -15,7 +20,8 @@ class CourseViewSet(viewsets.ModelViewSet):
     """
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
+    authentication_classes = [TokenAuthentication]
 
     def get_permissions(self):
         """
@@ -23,8 +29,16 @@ class CourseViewSet(viewsets.ModelViewSet):
         - Admins: Full CRUD permissions.
         - Teachers and Students: Only retrieve (view) permissions.
         """
+        # Handle unauthenticated users
+        if not self.request.user.is_authenticated:
+            return [permissions.IsAuthenticated()]  # Require authentication for all actions
+
+        # Permissions for authenticated users
         if self.action in ['create_course', 'update_course', 'delete_course']:
-            return [IsAdmin()]
+            if self.request.user.role == 'admin':
+                return [IsAdmin()]
+            return [permissions.IsAuthenticated()]  # Restrict non-admins from these actions
+
         elif self.action in ['list', 'retrieve_course', 'students_count', 'enrolled_students']:
             if self.request.user.role == 'admin':
                 return [IsAdmin()]
@@ -32,7 +46,10 @@ class CourseViewSet(viewsets.ModelViewSet):
                 return [IsTeacher()]
             elif self.request.user.role == 'student':
                 return [IsStudent()]
+
+        # Default permission check
         return super(CourseViewSet, self).get_permissions()
+
 
     def get_queryset(self):
         """
@@ -122,6 +139,38 @@ class CourseViewSet(viewsets.ModelViewSet):
         student_count = Enrollment.objects.filter(course_code=course).count()
         return Response({'course': course.course_name, 'student_count': student_count}, status=status.HTTP_200_OK)
 
+    @action(detail=False, methods=['get'], url_path='teacher_courses', permission_classes=[IsTeacher])
+    def teacher_courses(self, request):
+        user = request.user
+        print(request.headers)
+
+        # Check if the user is a teacher
+        if user.role != 'teacher':
+            return Response({"error": "Only teachers can access this endpoint."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Fetch all courses assigned to the teacher and annotate with student count
+        courses = Course.objects.filter(instructor_id=user).annotate(student_count=Count('enrollment'))
+
+        # Calculate total number of courses and total number of students
+        total_courses = courses.count()
+        total_students = sum(course.student_count for course in courses)
+
+        # Prepare the data to return
+        data = {
+            "total_courses": total_courses,
+            "total_students": total_students,
+            "courses": [
+                {
+                    "course_name": course.course_name,
+                    "student_count": course.student_count,
+                }
+                for course in courses
+            ]
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
+
+    
     @action(detail=True, methods=['get'], url_path='enrolled_students', permission_classes=[IsStudent | IsTeacher | IsAdmin])
     def enrolled_students(self, request, pk=None):
         """
@@ -216,3 +265,6 @@ def update_enrollment(self, request, pk=None):
             return Response({"error": f"Student with custom ID {student_id} does not exist."}, status=status.HTTP_400_BAD_REQUEST)
         except Enrollment.DoesNotExist:
             return Response({"error": "No enrollment found for this student in the specified course."}, status=status.HTTP_404_NOT_FOUND)
+        
+
+        
