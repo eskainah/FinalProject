@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import LoginSignup from "./components/Auth/LoginSignup";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import Dashboard from "./components/DashBoard/Dashboard";
-import { ApiProvider } from "./context/ApiContext";
-import "./App.css";
+import { ApiProvider } from "./context/ApiContext"; 
+import Attendance from "./components/DashBoard/Attendance";
+
 function App() {
   const logo = "/logo.png";
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Track login status
@@ -16,9 +17,10 @@ function App() {
 
   return (
     <AuthProvider>
-     <ApiProvider>
+      <ApiProvider>
         <Router>
           <Routes>
+            {/* Dashboard Route */}
             <Route
               path="/"
               element={
@@ -44,18 +46,20 @@ function App() {
                         </strong>
                       </p>
                       <button className="signinBtn">Sign In</button>
-                      <LoginSignup onLoginSuccess={handleLoginSuccess} /> {/* Ensure prop is passed */}
+                      <LoginSignup onLoginSuccess={handleLoginSuccess} />
                     </div>
                   </div>
                 )
               }
-            />
+            >
+              {/* Update the route path to match /course/:courseName */}
+              <Route path="/course/:courseName" element={<Attendance />} />
+            </Route>
           </Routes>
         </Router>
-        </ApiProvider>
+      </ApiProvider>
     </AuthProvider>
   );
 }
-
 
 export default App;
