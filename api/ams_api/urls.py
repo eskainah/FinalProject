@@ -16,11 +16,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework.authtoken.views import obtain_auth_token
 
 urlpatterns = [
+     
+     path('api/token/', obtain_auth_token, name='api_token_auth'),
+    
+    # Use this view to refresh the JWT token
+    
     path('admin/', admin.site.urls),
     path('api/', include('accounts.urls')),
-    path('', include('courses.urls')),
+    path('api/', include('courses.urls')),
     path('', include('attendance_records.urls')),
 ]
 
