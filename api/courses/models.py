@@ -66,6 +66,11 @@ class Course(models.Model):
         help_text="Choose from the current semesters (e.g., 'Fall 2024')."
     )
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['course_code']),  # Index on course_code for faster lookups
+        ]
+
     def clean(self):
         """Perform model validation."""
         # Validate instructor
@@ -111,6 +116,12 @@ class Enrollment(models.Model):
     instructor_name = models.CharField(max_length=255, editable=False)
     semester = models.CharField(max_length=20, editable=False)
     student_name = models.CharField(max_length=255, editable=False)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['student_id']),  # Index on student_id for faster lookups
+            models.Index(fields=['course_code']),  # Index on course_code for faster lookups
+        ]
 
     def clean(self):
         """Perform model validation."""
