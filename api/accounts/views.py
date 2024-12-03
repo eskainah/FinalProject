@@ -1,8 +1,12 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.contrib.auth import login, logout, get_user_model
+from django.contrib.auth import login, logout, get_user_model,authenticate
 from rest_framework.permissions import AllowAny
+<<<<<<< HEAD
+=======
+from rest_framework.authtoken.models import Token  # Import Token model
+>>>>>>> 1331b330c336ba9da9e3dbd22af8b51d51f448e9
 from .serializers import UserSerializer, LoginSerializer, SubAccountSerializer
 import logging
 
@@ -31,7 +35,7 @@ class AuthViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['post'], url_path='register-sub-account')
     def register_sub_account(self, request):
-        #pass the request context to the serializer
+        # pass the request context to the serializer
         if request.user.role != User.ADMIN:
             return Response({"error": "Only admins can create sub-accounts."}, status=status.HTTP_403_FORBIDDEN)
 
@@ -44,18 +48,23 @@ class AuthViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['post'], url_path='login')
     def login_view(self, request):
-        """
-        Handle user login using the provided username and password.
-        """
         serializer = LoginSerializer(data=request.data)
-        
         if serializer.is_valid():
-            user = serializer.validated_data
+            user = serializer.validated_data['user']  # Access the user object directly
+            
             login(request, user)  # Log the user in
-            return Response({"message": "Login successful"}, status=status.HTTP_200_OK)
-        
+
+            # Generate or retrieve the token
+            token, created = Token.objects.get_or_create(user=user)
+
+            return Response({
+                "message": "Login successful",
+                "username": user.username,
+                "role": user.role,
+                "token": token.key,  # Include the token in the response
+            }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     @action(detail=False, methods=['post'], url_path='logout')
     def logout_view(self, request):
         logout(request)
