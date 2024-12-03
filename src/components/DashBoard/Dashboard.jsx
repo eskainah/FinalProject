@@ -1,28 +1,76 @@
-import React, { useContext } from "react";
+import React, { useState,useContext, useEffect } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import  ApiContext  from "../../context/ApiContext";
 import Card from "./Card";
+import { Link, useNavigate, useLocation, useParams} from "react-router-dom";
+import Attendance from "./Attendance";
+
 //import RoleBasedContent from "./RoleBaseContent";
 
 const Dashboard = () => {
   
   const group = "/group.png";
-  const book = "/book.png"
+  const book = "/book.png";
+  const absent = "/absent.png";
+  const classroom = "/nature.png";
+  const hand = "/hand.png";
 
   const { user, logout } = useContext(AuthContext);
   const { data, loading, error } = useContext(ApiContext);
+
+  const [showAttendance, setShowAttendance] = useState(false); // State to manage attendance visibility
+
+  const navigate = useNavigate(); // Used for navigation on link click
+  const location = useLocation();
+  const { courseName } = useParams();
+
+  const [selectedCourse, setSelectedCourse] = useState(null);
+
+  useEffect(() => {
+    // Reset selected course when navigating to other routes
+    if (!courseName) {
+      setSelectedCourse(null);
+    }
+  }, [courseName]);
+
+  const handleCourseChange = (e) => {
+    setSelectedCourse(e.target.value);
+    navigate(`/course/${e.target.value}`);
+  };
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
   //if (data) return <div>{JSON.stringify(data)}</div>;
 
   const { total_courses = 0, total_students = 0, attendance = {}, courses = [] } = data;
+  
+  const handleCourseClick = (courseName) => {
+    setShowAttendance(true); // Hide the dashboard when a course is clicked
+    navigate(`/course/${courseName}`); // Navigate to the attendance route
+  };
+
   return (
     <div className="dashboard-container">
       {/* Dashboard UI */}
+      
       <section className="dashboard-header">
         <div className="logoImg"></div>
-
+          {/* display a dropdown list in the header when the attendance component is active         */}
+        {courseName && (
+          <div className="course-selector">
+            <select
+              id="course-select"
+              onChange={handleCourseChange}
+              value={selectedCourse || ""}
+            >
+              {courses.map((course) => (
+                <option key={course.course_name} value={course.course_name}>
+                  {course.course_name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="profile">
           <div className="profile_img">
           </div>
@@ -39,7 +87,11 @@ const Dashboard = () => {
       </section>
 
       <section className="dashboard-main">
-          <section className="col-1">
+      {courseName ? (
+            <Attendance selectedCourse={selectedCourse} />
+          ) : (
+         <div className="teacher-main-dashboard">
+         <section className="col-1">
             <div className="colItems itemspad">
                  <Card cornerElement={book} title="Total Courses" value={total_courses} /> 
             </div>
@@ -47,30 +99,44 @@ const Dashboard = () => {
               <Card cornerElement={group} title="Total Students" value={total_students} /> 
             </div>
             <div className="colItems present">
-              {/* <Card title="Present" value={attendance.present || 0} /> */}
+              <Card cornerElement={classroom} title="Present" value={attendance.present || 0} />
             </div>
             <div className="colItems absent">
-              {/* <Card title="Absent" value={attendance.absent || 0} /> */}
+               <Card cornerElement={absent} title="Absent" value={attendance.absent || 0} /> 
             </div>
             <div className="colItems excuse">
-              {/* <Card title="Excused" value={attendance.excused || 0} /> */}
+              <Card cornerElement={hand} title="Excused" value={attendance.excused || 0} /> 
+            </div>
+            <div className="colItems excuse">
+               
             </div>
           </section>
           <section className="col-1 "> 
             {courses.length > 0 ? (
                   courses.map((course) => (
                 <div className="colItems" key={course.course_name}>
-                  <Card  cornerElement={group} title={course.course_name} value={`${course.student_count}`}/>
+                  <Link 
+                    to={`/course/${course.course_name}`} 
+                    onClick={() => handleCourseClick(course.course_name)} 
+                    className="course-link"> 
+                      <Card 
+                        cornerElement={group} 
+                        title={course.course_name} 
+                        value={`${course.student_count}`} 
+                      />
+                  </Link>
                 </div>
               ))
             ) : (
               <p>No courses assigned</p>
             )}
           </section>
-
+           
           <section className="graphholder">
-
           </section>
+       
+         </div>
+          )}
       </section>
       
       </div>
