@@ -1,16 +1,13 @@
 from rest_framework import viewsets, status, serializers
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from .models import Course, Enrollment
 from .serializers import CourseSerializer, EnrollmentSerializer
 from .permissions import IsAdmin, IsTeacher, IsStudent
 from django.contrib.auth import get_user_model
 from django.db.models import Count
-from rest_framework.permissions import AllowAny
-from rest_framework import permissions
 from rest_framework.authentication import TokenAuthentication
-
 
 User = get_user_model()
 
@@ -18,7 +15,7 @@ class CourseViewSet(viewsets.ModelViewSet):
     """
     Viewset for handling Courses with role-based access control.
     """
-    queryset = Course.objects.all()
+    queryset = Course.objects.all().select_related('instructor')  # Use select_related for optimization
     serializer_class = CourseSerializer
     permission_classes = [AllowAny]
     authentication_classes = [TokenAuthentication]
@@ -29,17 +26,13 @@ class CourseViewSet(viewsets.ModelViewSet):
         - Admins: Full CRUD permissions.
         - Teachers and Students: Only retrieve (view) permissions.
         """
-        # Handle unauthenticated users
         if not self.request.user.is_authenticated:
-            return [permissions.IsAuthenticated()]  # Require authentication for all actions
-
-        # Permissions for authenticated users
+            return [IsAuthenticated()]
+        
         if self.action in ['create_course', 'update_course', 'delete_course']:
-            if self.request.user.role == 'admin':
-                return [IsAdmin()]
-            return [permissions.IsAuthenticated()]  # Restrict non-admins from these actions
+            return [IsAdmin()] if self.request.user.role == 'admin' else [IsAuthenticated()]
 
-        elif self.action in ['list', 'retrieve_course', 'students_count', 'enrolled_students']:
+        if self.action in ['list', 'retrieve_course', 'students_count', 'enrolled_students']:
             if self.request.user.role == 'admin':
                 return [IsAdmin()]
             elif self.request.user.role == 'teacher':
@@ -47,9 +40,7 @@ class CourseViewSet(viewsets.ModelViewSet):
             elif self.request.user.role == 'student':
                 return [IsStudent()]
 
-        # Default permission check
-        return super(CourseViewSet, self).get_permissions()
-
+        return super().get_permissions()
 
     def get_queryset(self):
         """
@@ -61,11 +52,11 @@ class CourseViewSet(viewsets.ModelViewSet):
         user = self.request.user
 
         if user.role == 'admin':
-            return Course.objects.all()
+            return self.queryset
         elif user.role == 'teacher':
-            return Course.objects.filter(instructor_id=user)
+            return self.queryset.filter(instructor_id=user)
         elif user.role == 'student':
-            return Course.objects.filter(enrollment__student_id=user)
+            return self.queryset.filter(enrollment__student_id=user)
         return Course.objects.none()
     
     @action(detail=False, methods=['get'], url_path='search', permission_classes=[IsAuthenticated])
@@ -73,29 +64,13 @@ class CourseViewSet(viewsets.ModelViewSet):
         """
         Search courses based on course_code, course_name, or instructor_name.
         """
-        course_code = request.query_params.get('course_code', None)
-        course_name = request.query_params.get('course_name', None)
-        instructor_name = request.query_params.get('instructor_name', None)
-
-        # Start with all courses
-        courses = self.get_queryset()
-
-        # Filter by course_code if provided
-        if course_code:
-            courses = courses.filter(course_code__icontains=course_code)
-
-        # Filter by course_name if provided
-        if course_name:
-            courses = courses.filter(course_name__icontains=course_name)
-
-        # Filter by instructor's full name if provided
-        if instructor_name:
-            courses = courses.filter(instructor_full_name__icontains=instructor_name)
-
-        # Serialize the filtered courses
+        filters = {
+            'course_code__icontains': request.query_params.get('course_code', ''),
+            'course_name__icontains': request.query_params.get('course_name', ''),
+            'instructor__full_name__icontains': request.query_params.get('instructor_name', '')
+        }
+        courses = self.get_queryset().filter(**{key: value for key, value in filters.items() if value})
         serializer = self.get_serializer(courses, many=True)
-
-        # Return the filtered courses
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'], url_path='create_course', permission_classes=[IsAdmin])
@@ -141,21 +116,17 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='teacher_courses', permission_classes=[IsTeacher])
     def teacher_courses(self, request):
+        """
+        Fetch all courses assigned to the teacher and annotate with student count.
+        """
         user = request.user
-        print(request.headers)
-
-        # Check if the user is a teacher
         if user.role != 'teacher':
             return Response({"error": "Only teachers can access this endpoint."}, status=status.HTTP_403_FORBIDDEN)
 
-        # Fetch all courses assigned to the teacher and annotate with student count
-        courses = Course.objects.filter(instructor_id=user).annotate(student_count=Count('enrollment'))
-
-        # Calculate total number of courses and total number of students
+        courses = self.queryset.filter(instructor_id=user).annotate(student_count=Count('enrollment'))
         total_courses = courses.count()
         total_students = sum(course.student_count for course in courses)
 
-        # Prepare the data to return
         data = {
             "total_courses": total_courses,
             "total_students": total_students,
@@ -170,59 +141,47 @@ class CourseViewSet(viewsets.ModelViewSet):
 
         return Response(data, status=status.HTTP_200_OK)
 
-    
     @action(detail=True, methods=['get'], url_path='enrolled_students', permission_classes=[IsStudent | IsTeacher | IsAdmin])
     def enrolled_students(self, request, pk=None):
         """
         Custom action to get the list of students enrolled in a specific course.
-        - Admins and Teachers can view all enrolled students in a course.
         """
         course = self.get_object()
         enrolled_students = Enrollment.objects.filter(course_code=course).values('student_name')
         return Response({'course': course.course_name, 'enrolled_students': enrolled_students}, status=status.HTTP_200_OK)
-    
-    @action(detail=False, methods=['post'], url_path='enroll-student')
+
+    @action(detail=False, methods=['post'], url_path='enroll-student', permission_classes=[IsAdmin])
     def enroll_student(self, request):
         """
-        Admin can enroll a student in multiple courses.
-        Expects a student custom ID and a list of course codes.
-        Example payload:
-        {
-            "student_id": "STU001",
-            "course_codes": ["CSC100", "CSC101"]
-        }
+        Admin can enroll a student in a single course.
+        Expects a student custom ID and a course code.
         """
         student_id = request.data.get("student_id")
-        course_codes = request.data.get("course_codes")
+        course_code = request.data.get("course_code")
 
-        if not student_id or not course_codes:
-            return Response({"error": "Both student_id and course_codes are required."}, status=status.HTTP_400_BAD_REQUEST)
+        if not student_id or not course_code:
+            return Response({"error": "Both student_id and course_code are required."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            # Fetch the student using the provided student_id
             student = User.objects.get(custom_id=student_id, role='student')
-        except User.DoesNotExist:
-            return Response({"error": f"Student with custom ID {student_id} does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+            course = Course.objects.get(course_code=course_code)
+        except (User.DoesNotExist, Course.DoesNotExist):
+            return Response({"error": "Invalid student ID or course code."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Enroll the student in each specified course
-        for course_code in course_codes:
-            try:
-                course = Course.objects.get(course_code=course_code)
+        if Enrollment.objects.filter(student_id=student.id, course_code=course.course_code).exists():
+            return Response({"error": "Student is already enrolled."}, status=status.HTTP_400_BAD_REQUEST)
 
-                # Validate using the Enrollment serializer
-                enrollment_data = {
-                    'student_id_input': student_id,
-                    'course_code': course
-                }
-                enrollment_serializer = EnrollmentSerializer(data=enrollment_data)
-                enrollment_serializer.is_valid(raise_exception=True)  # This will raise an error if validation fails
-                Enrollment.objects.create(student_id=student, course_code=course)
-            except Course.DoesNotExist:
-                return Response({"error": f"Course with course code {course_code} does not exist."}, status=status.HTTP_400_BAD_REQUEST)
-            except serializers.ValidationError as e:
-                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        enrollment_data = {
+            'student_id': student.id,
+            'course_code': course.course_code
+        }
 
-        return Response({"success": "Student enrolled in specified courses successfully."}, status=status.HTTP_201_CREATED)
+        enrollment_serializer = EnrollmentSerializer(data=enrollment_data)
+        if enrollment_serializer.is_valid():
+            enrollment_serializer.save()
+            return Response({"success": "Student enrolled successfully."}, status=status.HTTP_201_CREATED)
+
+        return Response(enrollment_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['delete'], url_path='delete-enrollment', permission_classes=[IsAdmin])
     def delete_enrollment(self, request, pk=None):
@@ -240,31 +199,5 @@ class CourseViewSet(viewsets.ModelViewSet):
             enrollment = Enrollment.objects.get(student_id=student, course_code=course)
             enrollment.delete()
             return Response({"success": "Enrollment deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
-        except User.DoesNotExist:
-            return Response({"error": f"Student with custom ID {student_id} does not exist."}, status=status.HTTP_400_BAD_REQUEST)
-        except Enrollment.DoesNotExist:
-            return Response({"error": "No enrollment found for this student in the specified course."}, status=status.HTTP_404_NOT_FOUND)
-
-def update_enrollment(self, request, pk=None):
-        """
-        Admin can update a student's enrollment in a course.
-        """
-        course = self.get_object()
-        student_id = request.data.get("student_id")
-
-        if not student_id:
-            return Response({"error": "student_id is required."}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            student = User.objects.get(custom_id=student_id, role='student')
-            enrollment = Enrollment.objects.get(student_id=student, course_code=course)
-            # You can add any additional fields to update as needed
-            enrollment.save()  # Assuming you want to just update some fields of the existing enrollment
-            return Response({"success": "Enrollment updated successfully."}, status=status.HTTP_200_OK)
-        except User.DoesNotExist:
-            return Response({"error": f"Student with custom ID {student_id} does not exist."}, status=status.HTTP_400_BAD_REQUEST)
-        except Enrollment.DoesNotExist:
-            return Response({"error": "No enrollment found for this student in the specified course."}, status=status.HTTP_404_NOT_FOUND)
-        
-
-        
+        except (User.DoesNotExist, Enrollment.DoesNotExist):
+            return Response({"error": "Invalid student ID or enrollment not found."}, status=status.HTTP_400_BAD_REQUEST)
