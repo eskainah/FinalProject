@@ -1,8 +1,8 @@
 from django.db import models
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-from courses.models import Enrollment  # Assuming Enrollment is in the 'enrollment' app
-
+from courses.models import Enrollment
+from accounts.models import CustomUser  # Assuming the CustomUser model is in the accounts app
 
 class Attendance(models.Model):
     # Choices for attendance status
@@ -20,9 +20,9 @@ class Attendance(models.Model):
     attendance_id = models.CharField(max_length=20, unique=True, primary_key=True)
     course_code = models.CharField(max_length=20, editable=False)  # Populated from Enrollment
     course_name = models.CharField(max_length=255, editable=False)  # Populated from Enrollment
-    student_id = models.CharField(max_length=10, editable=False)  # Auto-populated from Enrollment
+    student_id = models.ForeignKey(CustomUser, on_delete=models.CASCADE)  # ForeignKey to CustomUser
     student_name = models.CharField(max_length=255, editable=False)  # Auto-populated from Enrollment
-    instructor_id = models.CharField(max_length=10, editable=False)  # Populated from Course via Enrollment
+    instructor_id = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='instructor_attendance')  # ForeignKey to CustomUser
     instructor_name = models.CharField(max_length=255, editable=False)  # Populated from Course via Enrollment
     date = models.DateField(default=timezone.now)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES)
@@ -47,19 +47,20 @@ class Attendance(models.Model):
                 new_num = 1
             self.attendance_id = f"{self.course_code}-{new_num:03d}"
 
-        # Auto-populate data from Enrollment
+        # Auto-populate data from Enrollment and save for each student
         try:
             # Fetch the enrollment records for the students in the course
             enrollments = Enrollment.objects.filter(course_code=self.course_code)
             for enrollment in enrollments:
-                self.student_id = enrollment.student_id.custom_id
+                # Populate student data
+                self.student_id = enrollment.student_id
                 self.student_name = f"{enrollment.student_id.first_name} {enrollment.student_id.middle_name or ''} {enrollment.student_id.last_name}".strip()
                 self.course_name = enrollment.course_name
                 self.semester = enrollment.semester
-                self.instructor_id = enrollment.course_code.instructor_id.custom_id
+                self.instructor_id = enrollment.course_code.instructor_id
                 self.instructor_name = enrollment.course_code.instructor_full_name
 
-                # Save the attendance for each student
+                # Save the attendance for the student
                 super().save(*args, **kwargs)
 
         except Exception as e:
