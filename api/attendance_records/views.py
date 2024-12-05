@@ -1,42 +1,40 @@
+from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework import viewsets, permissions
 from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
-from django.db.models import Prefetch
-from .models import Attendance
-from courses.models import Course, Enrollment
+from .models import Attendance, AttendanceRecord
+from courses.models import Course
+from django.utils import timezone
+from accounts.models import CustomUser
 from .serializers import AttendanceSerializer
 
 class AttendanceViewSet(viewsets.ModelViewSet):
     serializer_class = AttendanceSerializer
 
-    # Pagination class for listing attendance records
     class StandardResultsSetPagination(PageNumberPagination):
-        page_size = 10  # Items per page
+        page_size = 10
         page_size_query_param = 'page_size'
         max_page_size = 100
 
-    # Define queryset with optimized queries using select_related/prefetch_related
     def get_queryset(self):
         user = self.request.user
         if user.role == 'admin':
-            # For admin, return all attendance records
             return Attendance.objects.all()
         elif user.role == 'teacher':
-            # For teacher, filter by instructor and use prefetch for related students
-            return Attendance.objects.filter(instructor_id=user.custom_id).select_related('instructor')
+            return Attendance.objects.filter(instructor_id=user.custom_id)
         elif user.role == 'student':
-            # For student, filter based on student enrollment
-            return Attendance.objects.filter(students_data__contains=user.custom_id).select_related('course_code')
+            return Attendance.objects.filter(students=user.custom_id)
         return Attendance.objects.none()
 
-    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated], url_path='create-attendance')
-    def create_attendance(self, request):
-        """Endpoint to create attendance records for teachers."""
+    
+    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated], url_path='upsert-attendance')
+    def upsert_attendance(self, request):
+        """Unified endpoint to create or update attendance records."""
         user = request.user
+
         if user.role != 'teacher':
-            return Response({"error": "Only teachers can create attendance records."}, status=403)
+            return Response({"error": "Only teachers can create or update attendance records."}, status=403)
 
         course_code = request.data.get('course_code')
         course = get_object_or_404(Course, course_code=course_code)
@@ -45,56 +43,52 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         if course.instructor_id.custom_id != user.custom_id:
             return Response({"error": "You are not assigned to this course."}, status=403)
 
-        # Create attendance record
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(serializer.data)
+        # Retrieve or create an attendance record
+        date = request.data.get('date', timezone.now().date())
+        attendance, created = Attendance.objects.get_or_create(
+            course_code=course_code,
+            date=date,
+            defaults={
+                'course_name': course.course_name,
+                'instructor_id': user,
+                'instructor_name': user.get_full_name(),
+            }
+        )
 
-    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated], url_path='teacher-view')
-    def view_attendance_by_course_teacher(self, request, pk=None):
-        """Teacher views attendance by course."""
-        user = request.user
-        course = get_object_or_404(Course, pk=pk, instructor_id=user.custom_id)
+        # Add or update students in the attendance record
+        students_data = request.data.get('students', [])
+        if not students_data:
+            return Response({"error": "At least one student must be included."}, status=400)
 
-        # Prefetch related students who are enrolled in the course for better performance
-        students_prefetch = Prefetch('students', queryset=course.students.all(), to_attr='enrolled_students')
+        existing_records = {record.student.custom_id: record for record in attendance.attendancerecord_set.all()}
 
-        # Get attendances for the course and prefetch the related students
-        attendances = Attendance.objects.filter(course_code=course.course_code).prefetch_related(students_prefetch)
-        serializer = self.get_serializer(attendances, many=True)
-        return Response(serializer.data)
+        for student_data in students_data:
+            student = get_object_or_404(CustomUser, custom_id=student_data.get('student_id'))
+            status = student_data.get('status')
 
-    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated], url_path='student-view')
-    def view_attendance_by_course_student(self, request, pk=None):
-        """Student views attendance by course."""
-        user = request.user
-        course = get_object_or_404(Course, pk=pk)
+            # Update existing records or create new ones
+            if student.custom_id in existing_records:
+                record = existing_records[student.custom_id]
+                record.status = status
+                record.save()
+            else:
+                AttendanceRecord.objects.create(
+                    attendance=attendance,
+                    student=student,
+                    status=status
+                )
 
-        # Check if the student is enrolled in the course using Enrollment model
-        enrollment = get_object_or_404(Enrollment, student_id=user.custom_id, course=course)
+        return Response({
+            "message": "Attendance record successfully " + ("created" if created else "updated"),
+            "attendance": AttendanceSerializer(attendance).data
+        })
         
-        # If the student is not enrolled, return an error
-        if not enrollment:
-            return Response({"error": "You are not enrolled in this course."}, status=403)
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated], url_path='teacher-view')
+    def teacher_view(self, request, course_code=None):
+        """Teacher views attendance by course using course_code as pk."""
+        user = request.user
+        course = get_object_or_404(Course, course_code=course_code, instructor_id=user.custom_id)
 
-        # Prefetch related students who are enrolled in the course for better performance
-        students_prefetch = Prefetch('students', queryset=course.students.all(), to_attr='enrolled_students')
-
-        # Get attendances for the course and prefetch the related students
-        attendances = Attendance.objects.filter(course_code=course.course_code).prefetch_related(students_prefetch)
-        serializer = self.get_serializer(attendances, many=True)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated], url_path='admin-view')
-    def view_attendance_by_course_admin(self, request, pk=None):
-        """Admin views attendance by course."""
-        course = get_object_or_404(Course, pk=pk)
-
-        # Prefetch related students who are enrolled in the course for better performance
-        students_prefetch = Prefetch('students', queryset=course.students.all(), to_attr='enrolled_students')
-
-        # Get attendances for the course and prefetch the related students
-        attendances = Attendance.objects.filter(course_code=course.course_code).prefetch_related(students_prefetch)
+        attendances = Attendance.objects.filter(course_code=course.course_code)
         serializer = self.get_serializer(attendances, many=True)
         return Response(serializer.data)

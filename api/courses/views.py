@@ -15,7 +15,7 @@ class CourseViewSet(viewsets.ModelViewSet):
     """
     Viewset for handling Courses with role-based access control.
     """
-    queryset = Course.objects.all().select_related('instructor')  # Use select_related for optimization
+    queryset = Course.objects.all().select_related('instructor_id')  # Use select_related for optimization
     serializer_class = CourseSerializer
     permission_classes = [AllowAny]
     authentication_classes = [TokenAuthentication]
@@ -56,7 +56,7 @@ class CourseViewSet(viewsets.ModelViewSet):
         elif user.role == 'teacher':
             return self.queryset.filter(instructor_id=user)
         elif user.role == 'student':
-            return self.queryset.filter(enrollment__student_id=user)
+            return self.queryset.filter(enrollments__student_id=user)
         return Course.objects.none()
     
     @action(detail=False, methods=['get'], url_path='search', permission_classes=[IsAuthenticated])
@@ -123,7 +123,7 @@ class CourseViewSet(viewsets.ModelViewSet):
         if user.role != 'teacher':
             return Response({"error": "Only teachers can access this endpoint."}, status=status.HTTP_403_FORBIDDEN)
 
-        courses = self.queryset.filter(instructor_id=user).annotate(student_count=Count('enrollment'))
+        courses = self.queryset.filter(instructor_id=user).annotate(student_count=Count('enrollments'))
         total_courses = courses.count()
         total_students = sum(course.student_count for course in courses)
 
@@ -132,6 +132,7 @@ class CourseViewSet(viewsets.ModelViewSet):
             "total_students": total_students,
             "courses": [
                 {
+                    "course_code": course.course_code,
                     "course_name": course.course_name,
                     "student_count": course.student_count,
                 }
@@ -146,9 +147,26 @@ class CourseViewSet(viewsets.ModelViewSet):
         """
         Custom action to get the list of students enrolled in a specific course.
         """
-        course = self.get_object()
-        enrolled_students = Enrollment.objects.filter(course_code=course).values('student_name')
-        return Response({'course': course.course_name, 'enrolled_students': enrolled_students}, status=status.HTTP_200_OK)
+        course = self.get_object()  # Fetch the Course object by its primary key (pk)
+        enrollments = Enrollment.objects.filter(course_code=course)  # Get all enrollments for the course
+        
+        # Serialize the enrolled students
+        enrolled_students = [
+            {
+                'student_id': enrollment.student_id.custom_id,
+                'student_name': enrollment.student_name,
+            }
+            for enrollment in enrollments
+        ]
+        
+        return Response(
+            {
+               
+                'course': course.course_code + " " +course.course_name,
+                'enrolled_students': enrolled_students
+            },
+            status=status.HTTP_200_OK
+        )
 
     @action(detail=False, methods=['post'], url_path='enroll-student', permission_classes=[IsAdmin])
     def enroll_student(self, request):
