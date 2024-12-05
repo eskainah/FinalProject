@@ -1,88 +1,65 @@
-from django.utils import timezone
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
-from .models import Attendance
-from courses.models import Course, Enrollment
-import json
-from rest_framework.pagination import PageNumberPagination
+from .models import Attendance, AttendanceRecord
+from accounts.models import CustomUser
 
-User = get_user_model()
+class StudentAttendanceSerializer(serializers.ModelSerializer):
+    student_id = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.filter(role=CustomUser.STUDENT),
+        source='student'
+    )
+    student_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AttendanceRecord
+        fields = ['student_id', 'student_name', 'status']
+
+    def get_student_name(self, obj):
+        """Retrieve the full name of the student from the related CustomUser model."""
+        return obj.student.get_full_name()
 
 class AttendanceSerializer(serializers.ModelSerializer):
-    # Auto-populated fields
-    course_name = serializers.ReadOnlyField()  # Course name is read-only
-    instructor_name = serializers.SerializerMethodField()  # Concatenating instructor's name
-    student_list = serializers.SerializerMethodField()  # List of students in the course
-    students_data = serializers.JSONField(write_only=True)  # Auto-populated field to store in JSON format
+    instructor_name = serializers.SerializerMethodField()
+    students = StudentAttendanceSerializer(source='attendancerecord_set', many=True)
 
     class Meta:
         model = Attendance
-        fields = ['attendance_id', 'course_code', 'course_name', 'instructor_id', 'instructor_name', 
-                  'student_list', 'date', 'semester', 'students_data', 'status']
+        fields = ['attendance_id', 'course_code', 'course_name', 'students', 'instructor_id', 'instructor_name']
+        read_only_fields = ['attendance_id']  # attendance_id is auto-generated
 
     def get_instructor_name(self, obj):
-        """Return the concatenated full name of the instructor."""
-        instructor = obj.instructor_id  # Assuming you store the instructor as a ForeignKey to User
-        return f"{instructor.first_name} {instructor.middle_name or ''} {instructor.last_name}".strip()
-
-    def get_student_list(self, obj):
-        """Retrieve and format the list of students for the course with pagination."""
-        # Use prefetch_related to optimize fetching students with pagination
-        enrollments = Enrollment.objects.filter(course_code=obj.course_code).select_related('student_id')
-        
-        # Get pagination data
-        paginator = PageNumberPagination()
-        paginator.page_size = 10  # You can set the page size as per your requirement
-        result_page = paginator.paginate_queryset(enrollments, self.context['request'])
-        
-        student_list = [{"student_id": enrollment.student_id.custom_id, 
-                         "name": f"{enrollment.student_id.first_name} {enrollment.student_id.middle_name or ''} {enrollment.student_id.last_name}".strip()} 
-                        for enrollment in result_page]
-
-        # Return the paginated result
-        return paginator.get_paginated_response(student_list)
+        """Retrieve the name of the instructor from the related CustomUser model."""
+        return obj.instructor_id.get_full_name()
 
     def validate(self, data):
-        """Validate the course code and populate relevant fields."""
-        course_code = data.get('course_code')
-        try:
-            # Use select_related to reduce the number of queries when fetching the course and instructor
-            course = Course.objects.select_related('instructor_id').get(course_code=course_code)
-            data['course_name'] = course.course_name  # Populate course name
-            data['semester'] = course.semester  # Populate semester
-
-            # Populate students_data as a JSON of student_id: full_name
-            students_data = {}
-            enrollments = Enrollment.objects.filter(course_code=course).select_related('student_id')
-            for enrollment in enrollments:
-                full_name = f"{enrollment.student_id.first_name} {enrollment.student_id.middle_name or ''} {enrollment.student_id.last_name}".strip()
-                students_data[enrollment.student_id.custom_id] = full_name  # Using custom_id for students
-            data['students_data'] = json.dumps(students_data)  # Store as JSON
-
-            # Populate instructor_id and instructor_name
-            instructor = course.instructor_id  # Use the course's instructor directly
-            data['instructor_id'] = instructor.custom_id  # Using custom_id for instructor
-            data['instructor_name'] = f"{instructor.first_name} {instructor.middle_name or ''} {instructor.last_name}"
-
-        except Course.DoesNotExist:
-            raise serializers.ValidationError("Invalid course code.")
+        """
+        Custom validation to ensure that course details (course_code, course_name, and instructor_id) are provided.
+        """
+        if not data.get('course_code') or not data.get('course_name') or not data.get('instructor_id'):
+            raise serializers.ValidationError("Course details (course_code, course_name, instructor) must be provided.")
         return data
 
     def create(self, validated_data):
-        """Override the create method to handle attendance creation."""
-        students_data = json.loads(validated_data.pop('students_data'))  # Deserialize JSON data
-        status_data = validated_data.get('status')  # Status remains as is (JSON)
+        """Override the create method to handle the creation of the attendance record."""
+        students_data = validated_data.pop('students', [])
+        course_code = validated_data.get('course_code')
+        course_name = validated_data.get('course_name')
+        instructor_id = validated_data.get('instructor_id')
 
-        # Create the Attendance record with all necessary fields
+        # Create attendance record
         attendance = Attendance.objects.create(
-            attendance_id=validated_data['attendance_id'],
-            course_code=validated_data['course_code'],
-            course_name=validated_data['course_name'],
-            instructor_id=validated_data['instructor_id'],
-            instructor_name=validated_data['instructor_name'],
-            date=timezone.now(),  # Automatically set the date to now
-            semester=validated_data['semester'],  # Use the semester from validation
-            students_data=students_data,  # Stored as JSON
-            status=status_data  # JSON field
+            course_code=course_code,
+            course_name=course_name,
+            instructor_id=instructor_id,
         )
+
+        # Create AttendanceRecord for each student
+        for student_data in students_data:
+            student = student_data['student']
+            status = student_data['status']
+            AttendanceRecord.objects.create(
+                attendance=attendance,
+                student=student,
+                status=status
+            )
+
         return attendance
