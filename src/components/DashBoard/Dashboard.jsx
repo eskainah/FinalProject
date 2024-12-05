@@ -2,7 +2,7 @@ import React, { useState,useContext, useEffect } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import  ApiContext  from "../../context/ApiContext";
 import Card from "./Card";
-import { Link, useNavigate, useLocation, useParams} from "react-router-dom";
+import { Link, useNavigate, useParams} from "react-router-dom";
 import Attendance from "./Attendance";
 
 //import RoleBasedContent from "./RoleBaseContent";
@@ -18,18 +18,16 @@ const Dashboard = () => {
   const { user, logout } = useContext(AuthContext);
   const { data, loading, error } = useContext(ApiContext);
 
-  const [showAttendance, setShowAttendance] = useState(false); // State to manage attendance visibility
-
   const navigate = useNavigate(); // Used for navigation on link click
-  const location = useLocation();
   const { courseName } = useParams();
 
   const [selectedCourse, setSelectedCourse] = useState(null);
 
   useEffect(() => {
-    // Reset selected course when navigating to other routes
-    if (!courseName) {
-      setSelectedCourse(null);
+    if (courseName) {
+      setSelectedCourse(courseName);
+    } else {
+      setSelectedCourse(null); // Reset if no courseName
     }
   }, [courseName]);
 
@@ -40,22 +38,19 @@ const Dashboard = () => {
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
-  //if (data) return <div>{JSON.stringify(data)}</div>;
 
   const { total_courses = 0, total_students = 0, attendance = {}, courses = [] } = data;
   
   const handleCourseClick = (courseName) => {
-    setShowAttendance(true); // Hide the dashboard when a course is clicked
     navigate(`/course/${courseName}`); // Navigate to the attendance route
   };
 
   return (
     <div className="dashboard-container">
-      {/* Dashboard UI */}
-      
+    
       <section className="dashboard-header">
         <div className="logoImg"></div>
-          {/* display a dropdown list in the header when the attendance component is active         */}
+          {/* display a dropdown list in the header when the attendance component is active  */}
         {courseName && (
           <div className="course-selector">
             <select
@@ -115,10 +110,10 @@ const Dashboard = () => {
             {courses.length > 0 ? (
                   courses.map((course) => (
                 <div className="colItems" key={course.course_name}>
-                  <Link 
-                    to={`/course/${course.course_name}`} 
-                    onClick={() => handleCourseClick(course.course_name)} 
-                    className="course-link"> 
+                  <Link to={`/course/${course.course_name}`} 
+                  onClick={() => handleCourseClick(course.course_name)} 
+                  className="course-link">
+                   
                       <Card 
                         cornerElement={group} 
                         title={course.course_name} 

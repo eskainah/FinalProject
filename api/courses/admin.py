@@ -14,16 +14,20 @@ class CourseAdmin(admin.ModelAdmin):
 admin.site.register(Course, CourseAdmin)
 
 class EnrollmentAdmin(admin.ModelAdmin):
-    list_display = ('student_name', 'course_code', 'course_name', 'credit_hours', 'semester', 'instructor_name')
-    fields = ('course_code_input', 'student_id_input')
-    search_fields = ('course_code', 'student_name', 'course_name', 'instructor_name')
+    list_display = ('get_student_id', 'student_name', 'course_code', 'course_name', 'credit_hours', 'semester', 'instructor_name')
+    fields = ('course_code', 'student_id')
+    search_fields = ('course_code', 'student_id__custom_id', 'student_name', 'course_name', 'instructor_name')
     list_filter = ('semester', 'credit_hours')
 
     def get_readonly_fields(self, request, obj=None):
         if obj:  # If an object is being edited
-            return ['course_code_input']  # Make the input field readonly
+            return ['course_code']  # Make the course_code field readonly
         return []
+
+    def get_student_id(self, obj):
+        """Display the actual student_id (custom_id) instead of the username."""
+        return obj.student_id.custom_id
+    get_student_id.short_description = "Student ID"  # Header for the column
 
 # Register the Enrollment model with the EnrollmentAdmin class
 admin.site.register(Enrollment, EnrollmentAdmin)
-

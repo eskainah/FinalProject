@@ -1,10 +1,10 @@
 from django.db import models
-from accounts.models import CustomUser
-from courses.models import Course
 from django.utils import timezone
-import json
+from django.core.exceptions import ValidationError
+from accounts.models import CustomUser  # Assuming CustomUser model is in accounts app
 
 class Attendance(models.Model):
+    # Choices for attendance status
     PRESENT = 'Present'
     ABSENT = 'Absent'
     EXCUSED = 'Excused'
@@ -15,33 +15,48 @@ class Attendance(models.Model):
         (EXCUSED, 'Excused'),
     ]
 
+    # Fields
     attendance_id = models.CharField(max_length=20, unique=True, primary_key=True)
-    course_code = models.CharField(max_length=10)  # Teacher-entered course code
-    course_name = models.CharField(max_length=100, blank=True)  # Auto-populated course name
-    instructor_id = models.CharField(max_length=10, blank=True)  # Auto-populated instructor ID
-    instructor_name = models.CharField(max_length=100, blank=True)  # Concatenated instructor name
-    students_data = models.JSONField(default=dict)  # Stores student IDs and concatenated names
+    course_code = models.CharField(max_length=20)  # Populated from frontend
+    course_name = models.CharField(max_length=255)  # Populated from frontend
+    instructor_id = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='instructor_attendance')  # ForeignKey to CustomUser
+    instructor_name = models.CharField(max_length=255)  # Populated from frontend
     date = models.DateField(default=timezone.now)
-    semester = models.CharField(max_length=10)
-    status = models.JSONField(default=dict)  # Stores student IDs and statuses as a JSON
+    students = models.ManyToManyField(CustomUser, through='AttendanceRecord', related_name='attendance_records')
+
+    def save(self, *args, **kwargs):
+        """Generate attendance_id and save the attendance record with the data passed during submission."""
+        # Ensure only one attendance record is created per day for a course
+        if Attendance.objects.filter(course_code=self.course_code, date=self.date).exists():
+            raise ValidationError(f"Attendance record for {self.course_code} already exists for {self.date}. Only one record can be created per day.")
+
+        # Generate attendance_id
+        if not self.attendance_id:
+            last_attendance = Attendance.objects.filter(course_code=self.course_code).order_by('attendance_id').last()
+            if last_attendance:
+                last_num = int(last_attendance.attendance_id.split('-')[-1])
+                new_num = last_num + 1
+            else:
+                new_num = 1
+            self.attendance_id = f"{self.course_code}-{new_num:03d}"
+
+        # Ensure required fields are provided
+        if not self.course_code or not self.course_name or not self.instructor_id or not self.instructor_name:
+            raise ValidationError("Course details (course_code, course_name, instructor) must be provided.")
+
+        # Save the attendance record
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.attendance_id} - {self.course_code} - {self.date}"
 
-    def save(self, *args, **kwargs):
-        if not self.attendance_id:
-            # Get the last attendance record for the same course code
-            last_attendance = Attendance.objects.filter(course_code=self.course_code).order_by('attendance_id').last()
-            if last_attendance:
-                last_num = int(last_attendance.attendance_id.split('-')[1])
-                new_num = last_num + 1
-            else:
-                new_num = 1
-            self.attendance_id = f"{self.course_code}-{new_num:03d}"  # e.g., CSC100-001
+class AttendanceRecord(models.Model):
+    student = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    attendance = models.ForeignKey(Attendance, on_delete=models.CASCADE)
+    status = models.CharField(max_length=10, choices=Attendance.STATUS_CHOICES)
 
-        # Auto-populate instructor name and ID if available
-        if self.instructor_id and not self.instructor_name:
-            instructor = CustomUser.objects.get(custom_id=self.instructor_id)
-            self.instructor_name = f"{instructor.first_name} {instructor.middle_name or ''} {instructor.last_name}"
+    class Meta:
+        unique_together = ('attendance', 'student')  # Ensure no duplicate attendance for same student
 
-        super().save(*args, **kwargs)
+    def __str__(self):
+        return f"{self.student.get_full_name()} - {self.status}"

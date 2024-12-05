@@ -39,6 +39,12 @@ class CustomUser(AbstractUser):
                 self.custom_id = f'S_{next_id}'
         super().save(*args, **kwargs)
 
+    def get_full_name(self):
+        """Return the full name, combining first, middle, and last names."""
+        if self.middle_name:
+            return f"{self.first_name} {self.middle_name} {self.last_name}"
+        return f"{self.first_name} {self.last_name}"
+
 class Profile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     school_name = models.CharField(max_length=100, blank=True, null=True)
