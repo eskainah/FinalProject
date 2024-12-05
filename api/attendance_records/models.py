@@ -1,8 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-from courses.models import Enrollment
-from accounts.models import CustomUser  # Assuming the CustomUser model is in the accounts app
+from accounts.models import CustomUser  # Assuming CustomUser model is in accounts app
 
 class Attendance(models.Model):
     # Choices for attendance status
@@ -18,26 +17,20 @@ class Attendance(models.Model):
 
     # Fields
     attendance_id = models.CharField(max_length=20, unique=True, primary_key=True)
-    course_code = models.CharField(max_length=20, editable=False)  # Populated from Enrollment
-    course_name = models.CharField(max_length=255, editable=False)  # Populated from Enrollment
-    student_id = models.ForeignKey(CustomUser, on_delete=models.CASCADE)  # ForeignKey to CustomUser
-    student_name = models.CharField(max_length=255, editable=False)  # Auto-populated from Enrollment
+    course_code = models.CharField(max_length=20)  # Populated from frontend
+    course_name = models.CharField(max_length=255)  # Populated from frontend
     instructor_id = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='instructor_attendance')  # ForeignKey to CustomUser
-    instructor_name = models.CharField(max_length=255, editable=False)  # Populated from Course via Enrollment
+    instructor_name = models.CharField(max_length=255)  # Populated from frontend
     date = models.DateField(default=timezone.now)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
-    semester = models.CharField(max_length=20, editable=False)  # Populated from Enrollment
+    students = models.ManyToManyField(CustomUser, through='AttendanceRecord', related_name='attendance_records')
 
     def save(self, *args, **kwargs):
-        """
-        Generate attendance_id and populate fields from the Enrollment model.
-        Ensure only one attendance record is created per day for a course.
-        """
-        # Check if an attendance record already exists for the course on this date
+        """Generate attendance_id and save the attendance record with the data passed during submission."""
+        # Ensure only one attendance record is created per day for a course
         if Attendance.objects.filter(course_code=self.course_code, date=self.date).exists():
             raise ValidationError(f"Attendance record for {self.course_code} already exists for {self.date}. Only one record can be created per day.")
 
-        # Ensure attendance_id is generated
+        # Generate attendance_id
         if not self.attendance_id:
             last_attendance = Attendance.objects.filter(course_code=self.course_code).order_by('attendance_id').last()
             if last_attendance:
@@ -47,24 +40,23 @@ class Attendance(models.Model):
                 new_num = 1
             self.attendance_id = f"{self.course_code}-{new_num:03d}"
 
-        # Auto-populate data from Enrollment and save for each student
-        try:
-            # Fetch the enrollment records for the students in the course
-            enrollments = Enrollment.objects.filter(course_code=self.course_code)
-            for enrollment in enrollments:
-                # Populate student data
-                self.student_id = enrollment.student_id
-                self.student_name = f"{enrollment.student_id.first_name} {enrollment.student_id.middle_name or ''} {enrollment.student_id.last_name}".strip()
-                self.course_name = enrollment.course_name
-                self.semester = enrollment.semester
-                self.instructor_id = enrollment.course_code.instructor_id
-                self.instructor_name = enrollment.course_code.instructor_full_name
+        # Ensure required fields are provided
+        if not self.course_code or not self.course_name or not self.instructor_id or not self.instructor_name:
+            raise ValidationError("Course details (course_code, course_name, instructor) must be provided.")
 
-                # Save the attendance for the student
-                super().save(*args, **kwargs)
-
-        except Exception as e:
-            raise ValidationError(f"Error saving attendance: {e}")
+        # Save the attendance record
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.attendance_id} - {self.course_code} - {self.date}"
+
+class AttendanceRecord(models.Model):
+    student = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    attendance = models.ForeignKey(Attendance, on_delete=models.CASCADE)
+    status = models.CharField(max_length=10, choices=Attendance.STATUS_CHOICES)
+
+    class Meta:
+        unique_together = ('attendance', 'student')  # Ensure no duplicate attendance for same student
+
+    def __str__(self):
+        return f"{self.student.get_full_name()} - {self.status}"
