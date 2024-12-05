@@ -1,12 +1,19 @@
-import React, { useState } from 'react';
-import './profile.css'
+import React, { useState, useEffect } from "react";
+import "./profile.css";
 
-const ProfileCard = ({ student }) => {
-  const [status, setStatus] = useState(''); // Track the current status (Present, Absent, Excused)
+const ProfileCard = ({ student, currentStatus, onStatusChange }) => {
+  const [status, setStatus] = useState(currentStatus); // Track the current status (Present, Absent, Excused)
+
+  useEffect(() => {
+    setStatus(currentStatus); // Sync status when switching courses
+  }, [currentStatus]);
 
   // Function to handle status change
   const handleStatusChange = (newStatus) => {
-    setStatus(newStatus);
+    if (status !== newStatus) {
+      onStatusChange(status, newStatus); // Notify parent about the status change
+      setStatus(newStatus); // Update local state
+    }
   };
 
   return (
@@ -22,20 +29,26 @@ const ProfileCard = ({ student }) => {
           <p>{student.std_ID}</p>
         </div>
       </div>
-      
+
       <div className="profile-actions">
         <button
-          className={`status-btn ${status === 'Present' ? 'active present' : ''}`}
-          onClick={() => handleStatusChange('Present')}
-        >P</button>
+          className={`status-btn ${status === "Present" ? "active present" : ""}`}
+          onClick={() => handleStatusChange("Present")}
+        >
+          P
+        </button>
         <button
-          className={`status-btn ${status === 'Absent' ? 'active absent' : ''}`}
-          onClick={() => handleStatusChange('Absent')}
-        >A</button>
+          className={`status-btn ${status === "Absent" ? "active absent" : ""}`}
+          onClick={() => handleStatusChange("Absent")}
+        >
+          A
+        </button>
         <button
-          className={`status-btn ${status === 'Excused' ? 'active excused' : ''}`}
-          onClick={() => handleStatusChange('Excused')}
-        >E</button>
+          className={`status-btn ${status === "Excused" ? "active excused" : ""}`}
+          onClick={() => handleStatusChange("Excused")}
+        >
+          E
+        </button>
       </div>
     </div>
   );
