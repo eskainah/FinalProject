@@ -1,29 +1,26 @@
 from django.db import models
 from django.conf import settings  # referencing custom User model
-from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 import re
 from django.utils import timezone
 from datetime import datetime
+from django.utils.translation import gettext_lazy as _
+from accounts.models import CustomUser
 
-  # Get the CustomUser model
-User = get_user_model()
 # Function to generate semester choices dynamically
 def current_year():
     return timezone.now().year
 
-def semester_choices():
-    current_year = timezone.now().year
-    return [
-        (f'Fall {current_year}', f'Fall {current_year}'),
-        (f'Spring {current_year}', f'Spring {current_year}'),
-        (f'Summer {current_year}', f'Summer {current_year}'),
-    ]
+SEMESTER_CHOICES = [
+    ('Fall', _('Fall')),
+    ('Spring', _('Spring')),
+    ('Summer', _('Summer')),
+]
 
 # Custom validator to ensure semester is not created in the past or future
 def validate_semester(value):
-    current_semester = semester_choices()
+    current_semester = SEMESTER_CHOICES()
     valid_semesters = [choice[0] for choice in current_semester]
     
     if value not in valid_semesters:
@@ -37,6 +34,11 @@ def validate_course_code(value):
         )
 
 class Course(models.Model):
+    semester = models.CharField(
+        max_length=50,
+        choices=[(f"{season} {current_year}", f"{season} {current_year}") for season in dict(SEMESTER_CHOICES).keys()],
+        validators=[validate_semester]
+    )
     course_code = models.CharField(
         max_length=20,
         primary_key=True,
@@ -53,18 +55,12 @@ class Course(models.Model):
     end_time = models.TimeField(help_text="Select end time (between 9 AM and 6 PM).")
     day_time = models.CharField(max_length=255, editable=False)
     instructor_id = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+       CustomUser,
         null=True,
         on_delete=models.CASCADE,
         related_name='courses_taught'
     )
     instructor_full_name = models.CharField(max_length=255, editable=False)
-    semester = models.CharField(
-        max_length=20,
-        choices=semester_choices(),
-        validators=[validate_semester],
-        help_text="Choose from the current semesters (e.g., 'Fall 2024')."
-    )
 
     class Meta:
         indexes = [
@@ -82,11 +78,11 @@ class Course(models.Model):
             self.instructor_full_name = f"{self.instructor_id.first_name} {self.instructor_id.middle_name or ''} {self.instructor_id.last_name}".strip()
 
         # Validate time and duration
-        if self.end_time <= self.start_time:
-            raise ValidationError("End time must be greater than start time.")
-        duration = (datetime.combine(datetime.today(), self.end_time) - datetime.combine(datetime.today(), self.start_time)).seconds / 3600
-        if duration != self.credit_hours:
-            raise ValidationError(f"The duration must be exactly {self.credit_hours} hour(s).")
+        def validate_duration(start_time, end_time, credit_hours):
+            duration = (datetime.combine(datetime.today(), end_time) - datetime.combine(datetime.today(), start_time)).seconds / 3600
+            if duration != credit_hours:
+                raise ValidationError(f"The duration ({duration} hours) must match credit hours ({credit_hours}).")
+
 
         # Ensure class_lab has correct prefix
         if not self.class_lab.startswith("CL-"):
@@ -98,15 +94,16 @@ class Course(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.course_name} ({self.course_code})"
+        return self.course_code
 
 
 class Enrollment(models.Model):
     student_id = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        CustomUser,
         null=True,
         on_delete=models.CASCADE,
-        related_name='enrollments'
+        related_name='enrollments',
+        to_field='custom_id'  # Explicitly reference the `custom_id` field in the CustomUser model
     )
     course_code = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='enrollments')
     course_name = models.CharField(max_length=255, editable=False)
