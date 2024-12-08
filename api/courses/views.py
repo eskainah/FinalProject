@@ -6,7 +6,7 @@ from .models import Course, Enrollment
 from .serializers import CourseSerializer, EnrollmentSerializer
 from .permissions import IsAdmin, IsTeacher, IsStudent
 from django.contrib.auth import get_user_model
-from django.db.models import Count
+from django.db.models import Count, F
 from rest_framework.authentication import TokenAuthentication
 
 User = get_user_model()
@@ -114,6 +114,8 @@ class CourseViewSet(viewsets.ModelViewSet):
         student_count = Enrollment.objects.filter(course_code=course).count()
         return Response({'course': course.course_name, 'student_count': student_count}, status=status.HTTP_200_OK)
 
+   
+
     @action(detail=False, methods=['get'], url_path='teacher_courses', permission_classes=[IsTeacher])
     def teacher_courses(self, request):
         """
@@ -123,10 +125,18 @@ class CourseViewSet(viewsets.ModelViewSet):
         if user.role != 'teacher':
             return Response({"error": "Only teachers can access this endpoint."}, status=status.HTTP_403_FORBIDDEN)
 
-        courses = self.queryset.filter(instructor_id=user).annotate(student_count=Count('enrollments'))
+        # Filter courses by instructor
+        courses = self.queryset.filter(instructor_id=user).annotate(student_count=Count('enrollments__student_id'))
         total_courses = courses.count()
-        total_students = sum(course.student_count for course in courses)
 
+        # Get unique student IDs across all courses
+        unique_student_ids = set(
+            self.queryset.filter(instructor_id=user)
+            .values_list('enrollments__student_id', flat=True)
+        )
+        total_students = len(unique_student_ids)
+
+        # Prepare response data
         data = {
             "total_courses": total_courses,
             "total_students": total_students,
@@ -141,7 +151,7 @@ class CourseViewSet(viewsets.ModelViewSet):
         }
 
         return Response(data, status=status.HTTP_200_OK)
-
+        
     @action(detail=True, methods=['get'], url_path='enrolled_students', permission_classes=[IsStudent | IsTeacher | IsAdmin])
     def enrolled_students(self, request, pk=None):
         """
