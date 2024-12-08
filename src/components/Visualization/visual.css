@@ -1,0 +1,94 @@
+h5{
+    margin: 10px 0  0 10px;
+    font-size: .75rem;
+    font-weight: 600;
+    font-family: sans-serif;
+}
+.pieCharts{
+    justify-content: space-between;
+    display: flex;
+    width: 100%;
+    gap: 8px;
+    height: 100%;
+}
+.chartSection{
+    flex: 1;
+    display: flex;
+    box-shadow: 0px 1px 5px 0px rgba(56, 55, 55, 0.75);
+    background-color: rgb(255, 255, 255);
+}
+.chartLabels{
+    ul{
+        padding-left: 0;
+        margin-top: 10px;
+        font-size: .65rem;
+    }
+    li{
+        display: flex;
+        align-items: center;
+        margin-bottom: 5px;
+        margin-left: 10px;
+        font-family: sans-serif;
+        font-weight: 600;
+    }
+    span{
+        width: 15px;
+        height: 15px; 
+        display: inline-block; 
+        margin-right: 3px;
+    }
+}
+.chartContainer{
+    height: 140px;
+    width: 140px;
+    margin: auto;
+}
+.lineGraph{
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.graphHeader{
+    justify-content: space-between;
+    padding-right: 10px;
+   height: 20px;
+   display: flex;
+   h5{
+    margin-top: 1px;
+   }
+  
+}
+.graphBtn{
+    display: flex;
+    width: 130px;
+    justify-content: space-between;
+    button{
+        padding: 0;
+        margin-top: 0px;
+        background-color: transparent;
+        font-size: 11px;
+        color: rgb(43, 38, 38);
+    }
+}
+    
+    
+.legend{
+    display: flex;
+    justify-content: center;
+    font-size: 10px;
+    div{
+        display: flex;
+        margin-right: 10px;
+        align-items: center;
+    }
+}
+.boxes{
+    width: 12px;
+    height: 12px;
+    margin-right: 3px;
+}
+.graphContainer{
+    flex-grow: 1;
+   height: 24vh;
+   width: 100%;
+}
