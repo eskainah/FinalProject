@@ -4,7 +4,9 @@ import  ApiContext  from "../../context/ApiContext";
 import Card from "./Card";
 import { Link, useNavigate, useParams} from "react-router-dom";
 import Attendance from "./Attendance";
-
+import AttendancePieCharts from "../Visualization/AttendancePieChart";
+import AttendanceLineGraph from "../Visualization/AttendanceLineGraph";
+import MyCalendar from "../Calender/Calendar";
 //import RoleBasedContent from "./RoleBaseContent";
 
 const Dashboard = () => {
@@ -16,7 +18,8 @@ const Dashboard = () => {
   const hand = "/hand.png";
 
   const { user, logout } = useContext(AuthContext);
-  const { data, loading, error } = useContext(ApiContext);
+  const { data, loading, error, totalPresentPercentage, totalAbsentPercentage, totalExcusedPercentage } = useContext(ApiContext);
+  
 
   const navigate = useNavigate(); // Used for navigation on link click
   const { courseName } = useParams();
@@ -75,6 +78,7 @@ const Dashboard = () => {
           </div>
         </div>
       </section>
+
       <div className="main-section">
       
       <section className="dashboard-nav">
@@ -94,13 +98,13 @@ const Dashboard = () => {
               <Card cornerElement={group} title="Total Students" value={total_students} /> 
             </div>
             <div className="colItems present">
-              <Card cornerElement={classroom} title="Present" value={attendance.present || 0} />
+              <Card cornerElement={classroom} title="Present" value={`${Math.round(totalPresentPercentage)}%`} />
             </div>
             <div className="colItems absent">
-               <Card cornerElement={absent} title="Absent" value={attendance.absent || 0} /> 
+               <Card cornerElement={absent} title="Absent" value={`${Math.round(totalAbsentPercentage)}%`} /> 
             </div>
             <div className="colItems excuse">
-              <Card cornerElement={hand} title="Excused" value={attendance.excused || 0} /> 
+              <Card cornerElement={hand} title="Excused" value={`${Math.round(totalExcusedPercentage)}%`} /> 
             </div>
             <div className="colItems excuse">
                
@@ -128,6 +132,18 @@ const Dashboard = () => {
           </section>
            
           <section className="graphholder">
+            <section className="dateLine">
+              <section className="line">
+                <AttendanceLineGraph />
+              </section>
+              <section className="date">
+                <MyCalendar />
+              </section>
+            </section>
+            <section className="Pie">
+              <AttendancePieCharts /> 
+            </section>
+            
           </section>
        
          </div>
@@ -135,6 +151,7 @@ const Dashboard = () => {
       </section>
       
       </div>
+      
     </div>
   );
 };
