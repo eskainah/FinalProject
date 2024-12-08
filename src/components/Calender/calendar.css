@@ -1,0 +1,75 @@
+
+.react-calendar {
+    font-family:  sans-serif;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    box-shadow: 0px 1px 5px 0px rgba(56, 55, 55, 0.75);
+  }
+  
+  /* Styling for the header (month/year) */
+  .react-calendar__navigation {
+    background-color: #0077cc;
+    color: white;
+    text-align: center;
+    padding: 0;
+  }
+  
+  /* Month and year buttons */
+  .react-calendar__navigation button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 10px; 
+    cursor: pointer;
+  }
+  
+  /* Styling for the day tiles */
+  .react-calendar__tile {
+    background-color: #f5f5f5;
+    padding: 4.2px; 
+    border-radius: 0;
+    transition: background-color 0.3s, color 0.3s;
+    color: #0f0f0f;
+    cursor: pointer;
+    font-size: .7rem;
+  }
+  
+  /* Hover effect on day tiles */
+  .react-calendar__tile:hover {
+    background-color: #0077cc;
+    color: white;
+  }
+  
+  /* Styling for the current day (highlight today's date) */
+  .highlight-today {
+    background-color: #838179 !important;
+    color: white !important;
+    border-radius: 0; 
+    font-weight: bold;
+  } 
+  
+  /* Disable previous and next buttons in the header */
+  .react-calendar__navigation button[disabled] {
+    background-color: #ccc;
+    color: #666;
+  }
+  
+  /* Weekday labels styling */
+  .react-calendar__month-view__weekdays {
+    background-color: #eeeeee;
+    font-weight: bold;
+    font-size: 10PX;
+    text-align: center;
+  }
+  
+  /* Styling for individual day numbers */
+  .react-calendar__tile--active {
+    background-color: #0077cc;
+    color: white;
+    border-radius: 0;
+  }
+  
+  .fade-out {
+    color: #ccc; 
+  }
