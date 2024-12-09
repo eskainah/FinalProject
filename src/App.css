@@ -1,0 +1,88 @@
+body{
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.par{
+    background-color: #b31f1f;
+    height: 100vh;
+    width: 90px;
+}
+.one{
+    background-color: #4d4747;
+    height: 50px;
+    width: 70px;
+}
+.two{
+    background-color: #1d069b;
+    height: 30px;
+    width: 70px;
+}
+.container{
+    background: url(/cwu.jpg);
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-size: cover;
+     p{
+      margin-bottom: 5px;
+    }
+  }
+  
+header {
+    display: flex;
+    margin: 0 auto;
+    width: 90%;
+    justify-content: space-between;
+    height: 60px;
+    gap: 800px;
+    section{
+        align-self: center;
+    }
+    img{
+      width: 140px;
+    }
+    nav{
+    align-content: center;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    }
+  }
+
+
+  .holder{
+    background-color: #b31f1f;
+  }
+  
+  .hero{
+    flex: 1;
+    width: 40%;
+    margin: 16% auto;
+    font-family: 'Roboto', sans-serif;
+    font-size: 24px;
+    text-align: center;
+    line-height: 30px;
+    color: rgba(245, 245, 245, 0.918);
+  }
+  
+  .signinBtn{
+    background-color: rgb(23, 23, 156);
+    padding: .4em 3em;
+    margin-top: 0;
+    border-radius: 50px;
+  }
+  .signinBtn:hover{
+    background-color: #ffffff;
+    color: rgb(12, 11, 11);
+    transition: background-color 0.80s;
+  }
+  
+  h1 {
+    font-size: 3.2em;
+    line-height: 1.1;
+  }
+   
