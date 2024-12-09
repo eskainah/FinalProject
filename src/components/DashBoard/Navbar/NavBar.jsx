@@ -1,24 +1,15 @@
-<<<<<<< HEAD
+
 import React, { useState } from 'react';
 import './navbar.css';
 import Dashboard from '../Dashboard';
 import Attendance from '../Attendance';
 
-// import Component6 from '../Component6';
 
-const NavBar = () => {
-=======
-import React, { useContext, useState } from 'react';
-import './navbar.css';
-import Attendance from '../Attendance';
-import { AuthContext } from '../../../../AuthContext';
-import { useNavigate } from 'react-router-dom';
-import App from '../../../App';
 const NavBar = () => {
     const { logout } = useContext(AuthContext); // Consume logout function from context
     const navigate = useNavigate(); 
+}
 
->>>>>>> 4cccd473471b054762e9440116dd044f3ecac159
     const bell = "/bell.png";
     const dashboard = "/dashboard.png";
     const group = "/group.png";
@@ -26,8 +17,7 @@ const NavBar = () => {
     const setting = "/setting.png";
     const exit = "/exit.png";
 
-<<<<<<< HEAD
-    const [activeTab, setActiveTab] = useState('tab1');
+  const [activeTab, setActiveTab] = useState('tab1');
 
     const renderComponent = () => {
         switch (activeTab) {
@@ -37,14 +27,14 @@ const NavBar = () => {
             case 'tab4': return <Dashboard />;
             case 'tab5': return <Dashboard />;
             // case 'tab6': return <Component6 />;
-=======
+        }
     const [activeTab, setActiveTab] = useState('tab1'); // Start with tab1 active
     const [isLoggedOut, setIsLoggedOut] = useState(false); // Track logout state
 
     const renderComponent = () => {
         switch (activeTab) {
             case 'tab3': return <Attendance />;
->>>>>>> 4cccd473471b054762e9440116dd044f3ecac159
+
             default: return null;
         }
     };
