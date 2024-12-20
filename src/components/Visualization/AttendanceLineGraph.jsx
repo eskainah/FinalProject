@@ -8,9 +8,6 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 
 const AttendanceLineGraph = () => {
   const { 
-    dailyPresentPercentage,
-    dailyAbsentPercentage,
-    dailyExcusedPercentage,
     weeklyPresentPercentage,
     weeklyAbsentPercentage,
     weeklyExcusedPercentage,
@@ -19,63 +16,42 @@ const AttendanceLineGraph = () => {
     monthlyExcusedPercentage,
   } = useContext(ApiContext);
 
-  
+  const [selectedGraph, setSelectedGraph] = useState('weekly');
 
-  const [selectedGraph, setSelectedGraph] = useState('daily');
-
-  // Use `useMemo` to avoid unnecessary recomputations of chartData
+  // Helper function to ensure the data is an array before using map
+  const safeMap = (data) => Array.isArray(data) ? data.map(percentage => Math.round(percentage)) : [];
+ 
   const chartData = useMemo(() => {
-    if (selectedGraph === 'daily') {
+    if (selectedGraph === 'weekly') {
       return {
-        labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
+        labels: Array.from({ length: 16 }, (_, i) => `Week ${i + 1}`),
         datasets: [
           {
             label: 'Present (%)',
-            data: dailyPresentPercentage.map(value => Math.round(value)),
+            data: safeMap(weeklyPresentPercentage),
             borderColor: 'green',
             backgroundColor: 'green',
             fill: false,
+            pointRadius: 0, 
+            borderWidth: 1, 
           },
           {
             label: 'Absent (%)',
-            data: dailyAbsentPercentage.map(value => Math.round(value)),
+            data: safeMap(weeklyAbsentPercentage),
             borderColor: 'red',
             backgroundColor: 'red',
             fill: false,
+            pointRadius: 0, 
+            borderWidth: 1, 
           },
           {
             label: 'Excused (%)',
-            data: dailyExcusedPercentage.map(value => Math.round(value)),
+            data: safeMap(weeklyExcusedPercentage),
             borderColor: 'blue',
             backgroundColor: 'blue',
             fill: false,
-          },
-        ],
-      };
-    } else if (selectedGraph === 'weekly') {
-      return {
-        labels: ['Week I', 'Week II', 'Week III', 'Week IV'],
-        datasets: [
-          {
-            label: 'Present (%)',
-            data: weeklyPresentPercentage.map(percentage => Math.round(percentage)),
-            borderColor: 'green',
-            backgroundColor: 'green',
-            fill: false,
-          },
-          {
-            label: 'Absent (%)',
-            data: weeklyAbsentPercentage.map(percentage => Math.round(percentage)),
-            borderColor: 'red',
-            backgroundColor: 'red',
-            fill: false,
-          },
-          {
-            label: 'Excused (%)',
-            data: weeklyExcusedPercentage.map(percentage => Math.round(percentage)),
-            borderColor: 'blue',
-            backgroundColor: 'blue',
-            fill: false,
+            pointRadius: 0, 
+            borderWidth: 1, 
           },
         ],
       };
@@ -85,33 +61,36 @@ const AttendanceLineGraph = () => {
         datasets: [
           {
             label: 'Present (%)',
-            data: monthlyPresentPercentage.map(percentage => Math.round(percentage)),
+            data: safeMap(monthlyPresentPercentage),
             borderColor: 'green',
             backgroundColor: 'green',
             fill: false,
+            pointRadius: 0,
+            borderWidth: 1,
           },
           {
             label: 'Absent (%)',
-            data: monthlyAbsentPercentage.map(percentage => Math.round(percentage)),
+            data: safeMap(monthlyAbsentPercentage),
             borderColor: 'red',
             backgroundColor: 'red',
             fill: false,
+            pointRadius: 0, 
+            borderWidth: 1, 
           },
           {
             label: 'Excused (%)',
-            data: monthlyExcusedPercentage.map(percentage => Math.round(percentage)),
+            data: safeMap(monthlyExcusedPercentage),
             borderColor: 'blue',
             backgroundColor: 'blue',
             fill: false,
+            pointRadius: 0, 
+            borderWidth: 1, 
           },
         ],
       };
     }
   }, [
     selectedGraph,
-    dailyPresentPercentage,
-    dailyAbsentPercentage,
-    dailyExcusedPercentage,
     weeklyPresentPercentage,
     weeklyAbsentPercentage,
     weeklyExcusedPercentage,
@@ -119,7 +98,6 @@ const AttendanceLineGraph = () => {
     monthlyAbsentPercentage,
     monthlyExcusedPercentage,
   ]);
-  
 
   // Chart options
   const chartOptions = useMemo(() => ({
@@ -165,20 +143,18 @@ const AttendanceLineGraph = () => {
 
   // Chart container style
   const chartContainerStyle = {
-    height: '100%',  // Or '100%' for dynamic resizing
+    height: '100%', 
     width: '100%',
   };
 
   return (
     <div className='lineGraph'>
-      {/* Buttons to switch between daily, weekly, and monthly graphs */}
       <section className='graphHeader'>
         <div>
           <h5>Attendance Comparison</h5>
         </div>
         {customLegend}
         <div className='graphBtn'>
-          <button onClick={() => setSelectedGraph('daily')}>Daily</button>
           <button onClick={() => setSelectedGraph('weekly')}>Weekly</button>
           <button onClick={() => setSelectedGraph('monthly')}>Monthly</button>
         </div>

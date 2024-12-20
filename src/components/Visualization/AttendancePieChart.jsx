@@ -1,4 +1,3 @@
-// AttendancePieCharts.js
 import React, { useEffect, useContext } from 'react';
 import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
@@ -22,7 +21,7 @@ const AttendancePieCharts = () => {
       {
         label: `${key} Percentage`,
         data: attendanceSummary.map((data) => data[key]),
-        backgroundColor: ['#00A9D7', '#6E7C7C', '#80BC00', '#3A8DDE', '#FFA400', '#164D48'],
+        backgroundColor: ['#00A9D7', '#6E7C7C', '#80BC00', '#0077cc', '#FFA400', '#164D48'],
       },
     ],
   });
@@ -33,7 +32,9 @@ const AttendancePieCharts = () => {
       legend: { display: false }, // Disable default legend
       datalabels: {
         color: '#fff',
-        formatter: (value) => `${value}%`, // Show percentage in the chart
+        formatter: (value) => {
+          return value.toFixed(0) + '%';
+         }, // Show percentage in the chart
         font: {
           size: 14,
           weight: 'bold',
@@ -55,7 +56,7 @@ const AttendancePieCharts = () => {
               <li key={index}>
                 <span
                   style={{
-                    backgroundColor: ['#00A9D7', '#6E7C7C', '#80BC00', '#3A8DDE', '#FFA400', '#164D48'][index],
+                    backgroundColor: ['#00A9D7', '#6E7C7C', '#80BC00', '#0077cc', '#FFA400', '#164D48'][index],
                   }}
                 ></span>
                 {data.course_name}
