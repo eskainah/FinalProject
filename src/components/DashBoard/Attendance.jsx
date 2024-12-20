@@ -164,6 +164,11 @@ const Attendance = () => {
         <div className="colItems excuse">
           <Card cornerElement={hand} title="Excused" value={currentCourseAttendance.statusCounts.Excused} />
         </div>
+        <div className="colItems excuse">
+        </div>
+        <div className="colItems excuse">
+          
+        </div>
       </section>
 
       <section className="profiles"> 
