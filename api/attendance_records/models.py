@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-from accounts.models import CustomUser  # Assuming CustomUser model is in accounts app
+from accounts.models import CustomUser 
 
 class Attendance(models.Model):
     # Choices for attendance status
@@ -32,12 +32,19 @@ class Attendance(models.Model):
 
         # Generate attendance_id
         if not self.attendance_id:
-            last_attendance = Attendance.objects.filter(course_code=self.course_code).order_by('attendance_id').last()
-            if last_attendance:
-                last_num = int(last_attendance.attendance_id.split('-')[-1])
-                new_num = last_num + 1
-            else:
-                new_num = 1
+            # Find all existing attendance_ids for the given course_code
+            existing_ids = Attendance.objects.filter(course_code=self.course_code).values_list('attendance_id', flat=True)
+            existing_numbers = sorted([int(id.split('-')[-1]) for id in existing_ids])
+
+            # Find the first missing number in the sequence
+            new_num = 1
+            for num in existing_numbers:
+                if num == new_num:
+                    new_num += 1  # Continue to the next number if there's no gap
+                else:
+                    break  # Found the gap, use the missing number
+
+            # Set the attendance_id with the smallest missing number
             self.attendance_id = f"{self.course_code}-{new_num:03d}"
 
         # Ensure required fields are provided
