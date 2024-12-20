@@ -6,7 +6,7 @@ const ApiContext = createContext();
 
 // API Provider component
 export const ApiProvider = ({ children }) => {
-  const { accessToken } = useContext(AuthContext);  // Access the token from AuthContext
+  const { accessToken, Loading, refreshToken } = useContext(AuthContext);  // Access the token from AuthContext
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [enrolledStudents, setEnrolledStudents] = useState([]);
@@ -21,10 +21,6 @@ export const ApiProvider = ({ children }) => {
   const [totalAbsentPercentage, setTotalAbsentPercentage] = useState(0);
   const [totalExcusedPercentage, setTotalExcusedPercentage] = useState(0);
   
-  const [dailyPresentPercentage, setDailyPresentPercentage] = useState(0);
-  const [dailyAbsentPercentage, setDailyAbsentPercentage] = useState(0);
-  const [dailyExcusedPercentage, setDailyExcusedPercentage] = useState(0);
-
   const [weeklyPresentPercentage, setWeeklyPresentPercentage] = useState(0);
   const [weeklyAbsentPercentage, setWeeklyAbsentPercentage] = useState(0);
   const [weeklyExcusedPercentage, setWeeklyExcusedPercentage] = useState(0);
@@ -33,36 +29,56 @@ export const ApiProvider = ({ children }) => {
   const [monthlyAbsentPercentage, setMonthlyAbsentPercentage] = useState(0);
   const [monthlyExcusedPercentage, setMonthlyExcusedPercentage] = useState(0);
 
-  // Function to fetch course data for the teacher
+
   const fetchData = async () => {
     if (!accessToken) {
       setError('No authentication token found');
       setLoading(false);
       return;
     }
-
     try {
       const response = await fetch('http://127.0.0.1:8000/api/courses/teacher_courses/', {
         method: 'GET',
         headers: {
-          'Authorization': `Token ${accessToken}`,  // Use the token with 'Token' prefix
+          'Authorization': `Token ${accessToken}`,
           'Content-Type': 'application/json',
         },
       });
-
-      if (!response.ok) {
+  
+      if (response.ok) {
+        const result = await response.json();
+        setData(result);  // Set the API response data
+      } else if (response.status === 401) {
+        // Token expired, attempt to refresh
+        const newToken = await refreshToken(); // Refresh the token
+  
+        if (newToken) {
+          // Retry the API call with the new token
+          const retryResponse = await fetch('http://127.0.0.1:8000/api/courses/teacher_courses/', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Token ${newToken}`,
+              'Content-Type': 'application/json',
+            },
+          });
+  
+          if (retryResponse.ok) {
+            const result = await retryResponse.json();
+            setData(result);
+          } else {
+            throw new Error('Failed to fetch data after token refresh');
+          }
+        }
+      } else {
         throw new Error('Failed to fetch course data');
       }
-
-      const result = await response.json();
-      setData(result);  // Set the API response data
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
-
+  
   // Function to fetch enrolled students for a specific course
   const fetchEnrolledStudents = async (courseCode) => {
     if (!accessToken) {
@@ -197,10 +213,6 @@ const fetchAttendanceTrends = async () => {
 
     const result = await response.json();
 
-    // Set daily percentages
-    setDailyPresentPercentage(result.daily_present_percentage);
-    setDailyAbsentPercentage(result.daily_absent_percentage);
-    setDailyExcusedPercentage(result.daily_excused_percentage);
 
     // Set weekly percentages
     setWeeklyPresentPercentage(result.weekly_present_percentage);
@@ -218,16 +230,61 @@ const fetchAttendanceTrends = async () => {
   }
 };
 
-// Use `useEffect` to fetch data when the component loads
-useEffect(() => {
-  fetchData();
-  if (accessToken) {
-    console.log("Fetching attendance summary...");
-   
-    fetchAttendanceSummary();
-    fetchAttendanceTrends();
+const [weeklyOverview, setWeeklyOverview] = useState([]);
+const [StudentAttendanceAverages, setStudentAttendanceAverages]= useState([]);
+const [fetchOverviewError, setFetchOverviewError] = useState(null); 
+
+const fetchOverview = async (courseCode, type, date = '') => {
+  setFetchOverviewError(null); 
+  if (!accessToken) {
+    setFetchOverviewError('No authentication token found');
+    return;
   }
-}, [accessToken]);
+
+  try {
+    let url = '';
+    if (type === 'weekly') {
+      url = `http://127.0.0.1:8000/api/attendance/weekly-overview/?course_code=${courseCode}`;
+    } else if (type === 'averages') {
+      url = `http://127.0.0.1:8000/api/attendance/std-attendance-ave/?course_code=${courseCode}`;
+    } else {
+      throw new Error('Invalid type specified');
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Token ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch attendance overview');
+    }
+
+    const result = await response.json();
+
+    if (type === 'weekly') {
+      setWeeklyOverview(result);
+    } else if (type === 'averages') {
+      setStudentAttendanceAverages(result);
+    }
+  } catch (err) {
+    setFetchOverviewError(err.message);
+  }
+};
+
+
+useEffect(() => {
+  if (!Loading) {
+    fetchData(); 
+    if (accessToken) {
+      fetchAttendanceSummary();
+      fetchAttendanceTrends();
+    }
+  }
+}, [accessToken, Loading]); 
  
   return (
     <ApiContext.Provider value={{
@@ -235,26 +292,26 @@ useEffect(() => {
       enrolledStudents,
       loading,
       error,
-      fetchEnrolledStudents,  // This will be called manually when needed
+      fetchEnrolledStudents, 
       fetchingStudents,
       fetchError,
       upsertAttendance,
       savingAttendance,
       saveError,
       attendanceSummary,
-       fetchAttendanceSummary,
+      fetchAttendanceSummary,
       totalPresentPercentage,
       totalAbsentPercentage,
       totalExcusedPercentage,
-      dailyPresentPercentage,
-      dailyAbsentPercentage,
-      dailyExcusedPercentage,
       weeklyPresentPercentage,
       weeklyAbsentPercentage,
       weeklyExcusedPercentage,
       monthlyPresentPercentage,
       monthlyAbsentPercentage,
       monthlyExcusedPercentage,
+      weeklyOverview,
+      fetchOverview,
+      StudentAttendanceAverages,
     }}>
       {children}
     </ApiContext.Provider>
