@@ -88,7 +88,6 @@ function LoginSignup({ onClose, onLoginSuccess }) {
       }
     } catch (error) {
       setError("An error occurred. Please try again.");
-      console.error("Login error:", error);
     }
   };
 
@@ -139,7 +138,7 @@ function LoginSignup({ onClose, onLoginSuccess }) {
       }
     } catch (error) {
       setError("An error occurred. Please try again.");
-      console.error("Registration error:", error);
+      
     }
   };
 
