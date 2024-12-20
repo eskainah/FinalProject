@@ -8,7 +8,7 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  /* background-color: #242424; */
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -29,60 +29,15 @@ a:hover {
 
 body {
   margin: 0;
-  height: 100vh;
+  height: 100%; 
+ 
 }
-header {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  height: 60px;
-  padding: 10px 50px 10px 50px;
-  img{
-    width: 180px;
-  }
-  nav{
-  align-content: center;
-  width: 230px;
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-  
-  }
-}
+
 .holder{
   background-color: #b31f1f;
 }
-.container{
-  background: url(/cwu.jpg);
-  height: 100%;
-  background-size: cover;
-   p{
-    margin-bottom: 5px;
-  }
-}
 
-.hero{
-  height: 32%;
-  width: 40%;
-  margin: 16% auto;
-  font-family: 'Roboto', sans-serif;
-  font-size: 24px;
-  text-align: center;
-  line-height: 30px;
-  color: rgba(245, 245, 245, 0.918);
-}
 
-.signinBtn{
-  background-color: rgb(15, 15, 121);
-  padding: .2em 3em;
-  margin-top: 0;
-  border-radius: 50px;
-}
-.signinBtn:hover{
-  background-color: #ffffff;
-  color: rgb(12, 11, 11);
-  transition: background-color 0.80s;
-}
 
 h1 {
   font-size: 3.2em;
@@ -113,23 +68,9 @@ button {
     background-color: #f9f9f9;
   }
 }
-.dashboard-container{
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  margin: 0;
-  font-size: 18px;
-  color: rgb(36, 35, 35);
-}
 
-.dashboard-header{
-  background-color: white;
-  height: 6%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
+
+
 .logoImg{
   width: 130px;
   height: 30px;
@@ -152,11 +93,11 @@ button {
   line-height: 16px;
   h4{
     margin: 0;
-    font-size: 14PX;
+    font-size: 12PX;
   }
   p{
     margin: 0;
-    font-size: 12PX;
+    font-size: 10PX;
   }
 }
 .profile_img{
@@ -166,24 +107,8 @@ button {
   border-radius: 50%;
   margin-right: 10px;
 }
-.main-section{
-  flex: 1;
-  display: flex;
-}
 
-.dashboard-nav{
-  background-color: #b31f1f;
-  flex-basis: 5vw;
-}
 
-.dashboard-main{
-  flex-basis: 95vw;
-  background-color:  rgb(226, 226, 226); 
-  display: flex;
-  flex-direction: column;
-  
- 
-}
 
 .excuse{
   h3{
@@ -208,6 +133,7 @@ button {
   flex-wrap: wrap;
   gap: 8px;
 }
+
 .colItems{
   flex: 1;
   height: 90px;
@@ -254,8 +180,8 @@ button {
   height: 60.3vh;
   margin: 8px  auto 0 auto;
   width: 95%;
-  max-width: 100%; 
   display: flex;
+  flex-wrap: wrap;
   flex-direction: column;
   gap: 8px;
 }
@@ -263,18 +189,22 @@ button {
   height: 31vh;
   width: 100%;
   display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 8px;
 
 }
-.date{
-  flex: 1;
-}
 .line{
-  flex: 4;
+  display: flex;
+  width: 80%;
   box-shadow: 0px 1px 5px 0px rgba(56, 55, 55, 0.75);
 }
+.date{
+  flex: 1;
+  height: 100%;
+}
+
 .Pie{
-  
   height: 26vh;
   width: 100%;
 }
@@ -316,3 +246,4 @@ button {
   }
   
 }
+
