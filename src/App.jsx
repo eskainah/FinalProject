@@ -6,7 +6,6 @@ import Dashboard from "./components/DashBoard/Dashboard";
 import { ApiProvider } from "./context/ApiContext"; 
 import Attendance from "./components/DashBoard/Attendance";
 import AttendanceOverview from "./components/DashBoard/TeacherDashboard/TeacherAttendanceOverView";
-import TeacherAttendanceOverview from "./components/DashBoard/TeacherDashboard/TeacherAttendanceOverView";
 import './App.css'
 
 function App() {
