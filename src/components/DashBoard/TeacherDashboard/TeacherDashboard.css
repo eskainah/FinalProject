@@ -1,0 +1,232 @@
+.overview_container{
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.col-1{
+    height: 15%;
+}
+.col-1:nth-child(1){
+    margin-top: 8px;
+}
+.course_info{
+    width: 18%;
+    flex-shrink: 0;
+    flex-grow: 0;
+}
+.indicator{
+    background-color: rgb(255, 255, 255);
+    width: 18%;
+    height: 100%;
+    flex-shrink: 0;
+    flex-grow: 0;
+    border: none;
+    box-shadow: 0px 1px 5px 0px rgba(56, 55, 55, 0.75);
+    display: flex;
+    flex-direction: row;
+}
+.indicator-item{
+    flex: 1;
+    font-size: 14px;
+    padding: 10px;
+    span{
+        margin-right: 10px;
+        padding: 1px 7px;
+    }
+}
+.box{
+    gap: 2px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.indicator-chart{
+    width: 70%;
+    height: 100%;
+    padding: 5px 0;
+}
+.chart{
+    margin: 0 auto;
+}
+.table_holder{
+    padding-top: 8px;
+    margin-bottom: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0px 1px 5px 0px rgba(56, 55, 55, 0.75);
+    background-color: rgb(255, 255, 255);;
+}
+.CrtlBtn{
+    height: 6%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    align-content: center;
+    gap: 8px;
+}
+
+.fields{
+    width: 80%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    div{
+        flex: 1;
+        justify-content: center;
+        align-items: center;
+        height: 20px;
+        display: flex;
+       
+        img{
+            width: 100%;
+            height: 100%;
+        }
+        button{
+            display: flex;
+            margin: 0;
+            width: 20px;
+            padding: 3px ;
+            height: 100%;
+            border: none;
+            border-radius: 0;
+            cursor: pointer;
+            border: 1px solid rgb(192, 190, 190);
+            border-left: none;
+            background-color: rgb(161, 158, 153);
+        }
+    }
+}
+h5{
+    font-size: .85rem;
+    margin-top: 0;
+    width: 250px;
+    color: rgb(61, 58, 58);
+}
+.search{
+    border: 1px solid rgb(192, 190, 190);
+    height: 20px;
+    width: 250px;
+    align-content: center;
+    border-radius: 2px;
+    padding-left: 8px;
+    background-color: transparent;
+    color: gray;
+    outline: none;
+}
+
+.btns{
+    flex: 1;
+    display: flex;
+    gap: 10px;
+}
+button{
+    align-self: center;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border-radius: 5px;
+    background-color: rgb(17, 35, 153);
+    img{
+        width: 12px;
+        height: 12px;  
+    }
+}
+
+.filter-list{
+    position: absolute;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    width: 82px;
+    
+    ul{
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+    }
+    li{
+        padding: 1px 10px;
+        cursor: pointer;
+        border-bottom: 1px solid #ccc;
+       font-size: .8rem;
+    }
+    ul li:nth-last-child(1){
+        padding: 1px 10px;
+        cursor: pointer;
+        border-bottom: none;
+    }
+}
+.DataTable{
+    flex: 1;
+}
+table{
+    width: 98%;
+    margin: 0 auto;
+    font-size: 12px;
+    border-spacing: 0;
+}
+thead{
+    background-color: rgb(148, 148, 148);
+    
+}
+th{
+    border-right: 1px solid #fff;
+}
+.weeksth{
+  
+    border-right: 1px solid #fff;
+}
+td{
+    border-bottom: 1px solid #fff;
+    border-right: 1px solid #fff;
+    background-color: rgb(226, 226, 226); ;
+
+}
+
+.status-box {
+    display: flex; 
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    width: 15px;
+    height: 15px;
+    text-align: center;
+    line-height: 10px;
+    font-weight: bold;
+    color: white;
+    border-radius: 5px;
+    margin: 0 auto;
+   
+  }
+  
+  .present-box {
+    background-color: green;
+  }
+  
+  .absent-box {
+    background-color: red;
+  }
+  
+  .excused-box {
+    background-color: blue;
+  }
+  .empty-box{
+    border: 1px solid gray;
+  }
+.avg-chart{
+    display: flex;
+    width: 100%;
+    height: 20px;
+    border: none;
+    overflow: hidden;
+    p{
+        margin: 0;
+        padding: 1px 5px;
+        color: #fff;
+    }
+}
