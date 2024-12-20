@@ -1,0 +1,57 @@
+body {
+    margin: 0;
+    height: 100%; 
+}
+.dashboard-container{
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    margin: 0;
+    font-size: 18px;
+    color: rgb(36, 35, 35);
+    box-sizing: border-box;
+}
+.dashboard-header{
+    background-color: white;
+    height: 40px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.main-section{
+    flex: 1;
+    display: flex;
+    width: 100%;
+    overflow: hidden;
+}
+
+.dashboard-nav{
+  width: 60px;
+}
+
+.dashboard-main{
+  flex: 1;
+  background-color:  rgb(226, 226, 226); 
+  display: flex;
+  flex-direction: column;
+}
+.courseList{
+  height: 20px;
+  align-items: center;
+  display: flex;
+  
+  select{
+    outline: none;
+    border: 1px solid #ccc;
+    border-radius: 2px;
+    font-size: 14px;
+    color: rgb(46, 43, 43);
+    background-color: transparent;
+    padding: 2px;
+  }
+}
