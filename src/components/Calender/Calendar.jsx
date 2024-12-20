@@ -1,8 +1,6 @@
-// src/components/Calendar.js
-
 import React, { useState } from 'react';
 import Calendar from 'react-calendar';
-import './calendar.css'; // Import your custom styles
+import './calendar.css'; 
 
 const MyCalendar = () => {
   const [date, setDate] = useState(new Date()); // Current selected date

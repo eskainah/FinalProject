@@ -9,6 +9,7 @@
   
   /* Styling for the header (month/year) */
   .react-calendar__navigation {
+    display: flex;
     background-color: #0077cc;
     color: white;
     text-align: center;
