@@ -1,0 +1,56 @@
+body {
+    margin: 0;
+    height: 100%;
+  }
+.container{
+    background: url(/cwu.jpg);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-size: cover;
+     p{
+      margin-bottom: 5px;
+    }
+  }
+  header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    height: 60px;
+    padding: 10px 50px 10px 50px;
+    img{
+      width: 180px;
+    }
+    nav{
+    align-content: center;
+    width: 230px;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    
+    }
+  }
+  .hero{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Roboto', sans-serif;
+    font-size: 24px;
+    text-align: center;
+    line-height: 30px;
+    color: rgba(245, 245, 245, 0.918);
+  }
+  .signinBtn{
+    background-color: rgb(15, 15, 121);
+    padding: .2em 3em;
+    margin-top: 0;
+    border-radius: 50px;
+  }
+  .signinBtn:hover{
+    background-color: #ffffff;
+    color: rgb(12, 11, 11);
+    transition: background-color 0.80s;
+  }
