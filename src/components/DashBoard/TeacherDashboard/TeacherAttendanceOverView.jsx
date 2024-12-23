@@ -53,7 +53,7 @@ const TeacherAttendanceOverview = ({ selectedCourse }) => {
   // Fetch attendance summary data
   useEffect(() => {
     fetchAttendanceSummary();
-  }, [fetchAttendanceSummary]);
+  }, []);
 
   // Fetch attendance data based on selected course and option
   useEffect(() => {
@@ -70,7 +70,7 @@ const TeacherAttendanceOverview = ({ selectedCourse }) => {
     return () => {
       controller.abort();
     };
-  }, [course, fetchOverview, selectedOption]);
+  }, [course, selectedOption]);
 
   // Memoize chart data for performance optimization
   const prepareChartData = useMemo(() => {

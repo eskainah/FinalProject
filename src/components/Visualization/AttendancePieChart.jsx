@@ -12,7 +12,7 @@ const AttendancePieCharts = () => {
 
   useEffect(() => {
     fetchAttendanceSummary();
-  }, [fetchAttendanceSummary]);
+  }, []);
 
   // Prepare chart data for each status (present, absent, excused)
   const prepareChartData = (key) => ({
