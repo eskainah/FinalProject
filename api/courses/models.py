@@ -20,10 +20,11 @@ SEMESTER_CHOICES = [
 
 # Custom validator to ensure semester is not created in the past or future
 def validate_semester(value):
-    current_semester = SEMESTER_CHOICES()
-    valid_semesters = [choice[0] for choice in current_semester]
+    valid_seasons = [choice[0] for choice in SEMESTER_CHOICES]  # ['Fall', 'Spring', 'Summer']
+    # Extract the season from "Spring 2025"
+    season = value.split()[0] if value else ''
     
-    if value not in valid_semesters:
+    if season not in valid_seasons:
         raise ValidationError(f'{value} is not a valid semester. Choose one from the current semesters.')
 
 # Validator for course code (3-4 uppercase letters followed by 3 digits)
@@ -36,7 +37,7 @@ def validate_course_code(value):
 class Course(models.Model):
     semester = models.CharField(
         max_length=50,
-        choices=[(f"{season} {current_year}", f"{season} {current_year}") for season in dict(SEMESTER_CHOICES).keys()],
+       choices=[(f"{season} {current_year()}", f"{season} {current_year()}") for season in dict(SEMESTER_CHOICES).keys()],
         validators=[validate_semester]
     )
     course_code = models.CharField(

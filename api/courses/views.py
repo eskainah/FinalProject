@@ -130,11 +130,14 @@ class CourseViewSet(viewsets.ModelViewSet):
         total_courses = courses.count()
 
         # Get unique student IDs across all courses
-        unique_student_ids = set(
-            self.queryset.filter(instructor_id=user)
-            .values_list('enrollments__student_id', flat=True)
+        unique_student_ids = (
+            Enrollment.objects.filter(course_code__in=courses.values_list('course_code', flat=True))
+            .exclude(student_id__isnull=True)
+            .values_list('student_id', flat=True)
+            .distinct()
         )
-        total_students = len(unique_student_ids)
+        total_students = unique_student_ids.count()
+
 
         # Prepare response data
         data = {
